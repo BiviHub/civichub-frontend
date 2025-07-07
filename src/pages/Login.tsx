@@ -17,7 +17,6 @@ const Login = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // For now, just redirect to appropriate dashboard based on user type
         if (userType === 'citizen') {
             window.location.href = '/citizen-dashboard';
         } else if (userType === 'admin') {
