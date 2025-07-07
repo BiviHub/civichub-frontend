@@ -8,6 +8,7 @@ import Register from "./pages/Register";
 import CitizenDashboard from "./pages/CitizenDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import WorkerDashboard from "./pages/WorkerDashboard";
+import ReportIssuePage from "./pages/ReportIssuePage";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
                             <Route path="/citizen-dashboard" element={<CitizenDashboard />} />
                             <Route path="/admin-dashboard" element={<AdminDashboard />} />
                             <Route path="/worker-dashboard" element={<WorkerDashboard />} />
+                            <Route path="/report" element={<ReportIssuePage />} />
                         </Routes>
                     </main>
 
