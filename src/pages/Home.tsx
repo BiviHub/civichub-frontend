@@ -221,7 +221,7 @@ const Home = () => {
                                 <div className="flex mb-4">
                                     {[...Array(5)].map((_, i) => (
                                         <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                                    ))}
+                                    ))};
                                 </div>
                                 <p className="text-gray-600 mb-6">"{testimonial.content}"</p>
                                 <div>
