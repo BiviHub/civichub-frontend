@@ -3,10 +3,7 @@ import Sidebar from '../components/Sidebar';
 import PostFormModal from '../components/PostFormModal';
 import PostCard from '../components/PostCard';
 import LoadingSpinner from '../components/LoadingSpinner';
-import samplepost from '../assets/images/sample-post.jpg';
-import waste from '../assets/images/waste.jpg';
-import publicSafetyVideo from '../assets/videos/Public Safety.mp4';
-import road from '../assets/videos/road.mp4';
+
 interface Post {
     date: string;
     location: string;
@@ -15,42 +12,16 @@ interface Post {
     video?: string;
 }
 
-const mockPosts: Post[] = [
-    {
-        date: 'Today',
-        location: 'Ikeja, Lagos',
-        content: 'Broken water pipe on the road.',
-        image: samplepost,
-    },
-    {
-        date: 'Yesterday',
-        location: 'Garki, Abuja',
-        content: 'Uncollected waste for days!',
-        image: waste,
-    },
-    {
-        date: 'Today',
-        location: 'Wuse Zone 6, Abuja',
-        content: 'Video footage showing a safety violation.',
-        video: publicSafetyVideo,
-    },
-    {
-        date: 'Today',
-        location: 'Wuse Zone 6, Enugu',
-        content: 'Goverment are doing good roads at Enugu .',
-        video: road,
-    },
-];
-
 const NewsFeed = () => {
-    const [posts, setPosts] = useState<Post[]>(mockPosts);
-    const [filteredPosts, setFilteredPosts] = useState<Post[]>(mockPosts);
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [sidebarExpanded, setSidebarExpanded] = useState(true);
 
     useEffect(() => {
+        // Simulate loading
         setTimeout(() => {
             setIsLoading(false);
         }, 1000);
@@ -124,6 +95,7 @@ const NewsFeed = () => {
 };
 
 export default NewsFeed;
+
 
 
 
