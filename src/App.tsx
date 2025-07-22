@@ -1,14 +1,29 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route , Navigate } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import CitizenDashboard from "./pages/CitizenDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import WorkerDashboard from "./pages/WorkerDashboard";
-import ReportIssuePage from "./pages/ReportIssuePage";
+import AdminDashboard from './pages/admin/AdminDashboard';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import NewsFeed from './pages/NewsFeed';
+import Profile from './pages/Profile';
+import Settings from './pages/Settings'; // Coming next
+import MyPosts from './pages/MyPosts';
+import ReportDetails from './pages/ReportDetails';
+import AdminRegister from './pages/AdminRegister';
+import TwoFactorSettings from './pages/TwoFactorSettings';
+import FlaggedPosts from "./pages/admin/FlaggedPosts.tsx";
+import ManageReports from './pages/admin/ManageReports';
+import Users from './pages/admin/Users';
+import ContentManagement from './pages/admin/ContentManagement';
+import Announcements from './pages/admin/Announcements';
+import Analytics from './pages/admin/Analytics';
+import AdminSettings from './pages/admin/Settings';
+import AdminProfile from './pages/admin/Profile';
+
 
 const queryClient = new QueryClient();
 
@@ -23,10 +38,32 @@ const App = () => (
                             <Route path="/" element={<Home />} />
                             <Route path="/login" element={<Login />} />
                             <Route path="/register" element={<Register />} />
-                            <Route path="/citizen-dashboard" element={<CitizenDashboard />} />
+                            <Route path={"/admin-register"} element={<AdminRegister />} /> {/* ✅ Admin Route */}
+                            <Route path="/two-factor-settings" element={<TwoFactorSettings />} />
+
+                            <Route path="/forgot-password" element={<ForgotPassword />} />
+                            <Route path="/reset-password" element={<ResetPassword />} />
+                            <Route path="/my-posts" element={<MyPosts />} />
+                            {/* Authenticated Routes (Simulated for now) */}
+                            <Route path="/newsfeed" element={<NewsFeed />} />
+                            <Route path="/profile" element={<Profile />} />
+                            <Route path="/settings" element={<Settings />} />
                             <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                            <Route path="/worker-dashboard" element={<WorkerDashboard />} />
-                            <Route path="/report" element={<ReportIssuePage />} />
+                            <Route path="/report/:id" element={<ReportDetails />} />
+
+                            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                            <Route path="/admin/reports" element={<ManageReports />} />
+                            <Route path="/admin/flagged" element={<FlaggedPosts />} />
+                            <Route path="/admin/users" element={<Users />} />
+                            <Route path="/admin/content" element={<ContentManagement />} />
+                            <Route path="/admin/announcements" element={<Announcements />} />
+                            <Route path="/admin/analytics" element={<Analytics />} />
+                            <Route path="/admin/settings" element={<AdminSettings />} />
+                            <Route path="/admin/profile" element={<AdminProfile />} />
+
+
+                            {/* Fallback */}
+                            <Route path="*" element={<Navigate to="/" />} />
                         </Routes>
                     </main>
 
