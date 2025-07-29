@@ -10,18 +10,24 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.6",
     "@tanstack/react-query": "^5.81.5",
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
     "framer-motion": "^12.23.0",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.525.0",
+    "prop-types": "^15.8.1",
     "react": "^19.1.0",
+    "react-csv": "^2.2.2",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
+    "@types/jwt-decode": "^2.2.1",
     "@types/node": "^24.0.14",
     "@types/react": "^19.1.8",
+    "@types/react-csv": "^1.1.10",
     "@types/react-dom": "^19.1.6",
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^4.5.2",
@@ -35,5 +41,18 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.34.1",
     "vite": "^7.0.0"
-  }
+  },
+  "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NonyDom/civichub-frontend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NonyDom/civichub-frontend/issues"
+  },
+  "homepage": "https://github.com/NonyDom/civichub-frontend#readme"
 }

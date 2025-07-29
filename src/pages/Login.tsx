@@ -1,20 +1,53 @@
 import { useState } from 'react';
 import { Mail, Lock, LogIn } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { login } from '../services/authService';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
+
+
+// Define type for the decoded token
+interface DecodedToken {
+    sub: string;
+    role?: string;
+    'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'?: string;
+    [key: string]: unknown;
+}
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const navigate = useNavigate();
+    const [error, setError] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
 
-        // 🔒 Later: connect to backend login API
-        console.log('Login:', { email, password });
+        try {
+            const result = await login({ email, password });
+            localStorage.setItem('token', result.token);
 
-        // Redirect user to newsfeed after login (temporary logic)
-        window.location.href = '/newsfeed';
+            const decoded = jwtDecode<DecodedToken>(result.token);
+            const role =
+                decoded.role ||
+                decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+
+            if (role?.toLowerCase() === 'admin') {
+                navigate('/admin-dashboard');
+            } else {
+                navigate('/newsfeed');
+            }
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err) && err.response) {
+                setError(err.response.data || 'Login failed.');
+            } else if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError('Login failed. Please try again.');
+            }
+        }
     };
 
     return (
@@ -32,7 +65,11 @@ const Login = () => {
                 </div>
 
                 <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">Welcome Back</h2>
-                <p className="text-center text-sm text-gray-500 mb-6">Login to continue reporting civic issues</p>
+                <p className="text-center text-sm text-gray-500 mb-6">
+                    Login to continue reporting civic issues
+                </p>
+
+                {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="relative">
@@ -81,3 +118,6 @@ const Login = () => {
 };
 
 export default Login;
+
+
+
