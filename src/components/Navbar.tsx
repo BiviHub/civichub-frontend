@@ -34,10 +34,10 @@ const Navbar = () => {
                         <Link to="/track" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
                             Track Complaints
                         </Link>
-                        <Link to="/about" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+                        <Link to="/pages/about" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
                             About
                         </Link>
-                        <Link to="/contact" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+                        <Link to="/pages/contact" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
                             Contact
                         </Link>
                     </div>
@@ -79,10 +79,10 @@ const Navbar = () => {
                             <Link to="/track" className="text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">
                                 Track Complaints
                             </Link>
-                            <Link to="/about" className="text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">
+                            <Link to="/About" className="text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">
                                 About
                             </Link>
-                            <Link to="/contact" className="text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">
+                            <Link to="/Contact" className="text-gray-700 hover:text-blue-600 font-medium py-2 transition-colors">
                                 Contact
                             </Link>
                             <div className="flex flex-col space-y-2 pt-4 border-t border-gray-200">

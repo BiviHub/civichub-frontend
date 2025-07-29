@@ -14,7 +14,7 @@ const Login = () => {
         console.log('Login:', { email, password });
 
         // Redirect user to newsfeed after login (temporary logic)
-        window.location.href = '/newsfeed';
+        window.location.href = '/user/news';
     };
 
     return (

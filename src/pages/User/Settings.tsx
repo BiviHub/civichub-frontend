@@ -8,12 +8,26 @@ import {
     Globe,
     Palette,
     Trash2,
+    SettingsIcon,
     Moon,
-    Settings as SettingsIcon,
+    Camera,
 } from 'lucide-react';
+import { useTheme } from '../../Context/ThemeContext.tsx';
 
 const Settings = () => {
     const [activeTab, setActiveTab] = useState('profile');
+
+    // Toggle states
+    const [emailNotifications, setEmailNotifications] = useState(true);
+    const [smsNotifications, setSmsNotifications] = useState(false);
+    const [pushNotifications, setPushNotifications] = useState(false);
+    const [twoFactorAuth, setTwoFactorAuth] = useState(false);
+    const { isDarkMode, toggleDarkMode } = useTheme();
+
+    // Notification-specific toggles
+    const [followedUsers, setFollowedUsers] = useState(true);
+    const [localPosts, setLocalPosts] = useState(false);
+    const [generalActivity, setGeneralActivity] = useState(true);
 
     const tabs = [
         { id: 'profile', label: 'Profile', icon: User },
@@ -23,12 +37,36 @@ const Settings = () => {
         { id: 'appearance', label: 'Appearance', icon: Palette },
     ];
 
-    const settingsBoxClass =
-        'bg-white/10 rounded-2xl p-6 border border-white/20 backdrop-blur-sm';
+    const settingsBoxClass = 'bg-white/10 dark:bg-white/5 rounded-2xl p-6 border border-white/20 backdrop-blur-sm';
+
+    interface ToggleSwitchProps {
+        checked: boolean;
+        onChange: (value: boolean) => void;
+        label: string;
+    }
+
+    const ToggleSwitch = ({ checked, onChange, label }: ToggleSwitchProps) => (
+        <div className="flex items-center justify-between">
+            <span className="text-white/90">{label}</span>
+            <button
+                onClick={() => onChange(!checked)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    checked ? 'bg-green-500' : 'bg-white/30'
+                }`}
+            >
+        <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                checked ? 'translate-x-6' : 'translate-x-1'
+            }`}
+        />
+            </button>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-600 to-green-500 p-4 md:p-8 text-white">
+        <div className="min-h-screen bg-gradient-to-br from-blue-600 to-green-500 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8 text-white">
             <div className="max-w-7xl mx-auto relative">
+                {/* Header */}
                 <div className="text-center mb-10">
                     <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-xl rounded-full mb-6 border border-white/30">
                         <SettingsIcon className="w-10 h-10 text-white" />
@@ -38,7 +76,7 @@ const Settings = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-white/10 p-2 mb-8 border border-white/20 rounded-2xl backdrop-blur-xl">
+                <div className="bg-white/10 dark:bg-white/5 p-2 mb-8 border border-white/20 rounded-2xl backdrop-blur-xl">
                     <div className="flex flex-wrap gap-2">
                         {tabs.map(({ id, label, icon: Icon }) => (
                             <button
@@ -46,7 +84,7 @@ const Settings = () => {
                                 onClick={() => setActiveTab(id)}
                                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all ${
                                     activeTab === id
-                                        ? 'bg-white text-blue-600 shadow-lg scale-105'
+                                        ? 'bg-white text-blue-600 dark:text-blue-500 shadow-lg scale-105'
                                         : 'text-white/80 hover:bg-white/10 hover:text-white'
                                 }`}
                             >
@@ -58,36 +96,67 @@ const Settings = () => {
                 </div>
 
                 {/* Content Area */}
-                <div className="bg-white/15 p-8 rounded-3xl border border-white/20 backdrop-blur-xl">
+                <div className="bg-white/15 dark:bg-white/10 p-8 rounded-3xl border border-white/20 backdrop-blur-xl">
                     {activeTab === 'profile' && (
                         <div className="space-y-6">
                             <h2 className="text-3xl font-bold mb-4">Profile</h2>
 
+                            {/* Profile Picture Section */}
                             <div className={settingsBoxClass}>
-                                <h3 className="text-lg font-semibold mb-2">Full Name</h3>
-                                <input
-                                    type="text"
-                                    defaultValue="John Doe"
-                                    className="w-full bg-white/10 border border-white/20 p-3 rounded-xl text-white"
-                                />
+                                <h3 className="text-lg font-semibold mb-4">Profile Picture</h3>
+                                <div className="flex flex-col sm:flex-row items-center gap-6">
+                                    <div className="relative">
+                                        <div className="w-24 h-24 rounded-full bg-white/20 border-2 border-white/30 overflow-hidden flex items-center justify-center">
+                                            <User className="w-10 h-10 text-white/60 dark:text-white/50" />
+                                        </div>
+                                        <button className="absolute -bottom-1 -right-1 w-8 h-8 bg-white text-blue-600 dark:text-blue-500 rounded-full flex items-center justify-center border-2 border-blue-600 hover:bg-white/90 transition-colors">
+                                            <Camera className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                                <p className="text-white/60 dark:text-white/50 text-sm mt-4">
+                                    Recommended: Square image, at least 200x200 pixels
+                                </p>
                             </div>
 
-                            <div className={settingsBoxClass}>
-                                <h3 className="text-lg font-semibold mb-2">Email Address</h3>
-                                <input
-                                    type="email"
-                                    defaultValue="john@example.com"
-                                    className="w-full bg-white/10 border border-white/20 p-3 rounded-xl text-white"
-                                />
+                            {/* Name Fields in One Row */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className={settingsBoxClass}>
+                                    <h3 className="text-sm font-semibold mb-2">First Name</h3>
+                                    <input
+                                        type="text"
+                                        defaultValue="John"
+                                        className="w-full bg-white/10 dark:bg-white/5 border border-white/20 p-3 rounded-xl text-white placeholder-white/50"
+                                    />
+                                </div>
+                                <div className={settingsBoxClass}>
+                                    <h3 className="text-sm font-semibold mb-2">Last Name</h3>
+                                    <input
+                                        type="text"
+                                        defaultValue="Doe"
+                                        className="w-full bg-white/10 dark:bg-white/5 border border-white/20 p-3 rounded-xl text-white placeholder-white/50"
+                                    />
+                                </div>
                             </div>
 
-                            <div className={settingsBoxClass}>
-                                <h3 className="text-lg font-semibold mb-2">Username</h3>
-                                <input
-                                    type="text"
-                                    defaultValue="johndoe"
-                                    className="w-full bg-white/10 border border-white/20 p-3 rounded-xl text-white"
-                                />
+                            {/* Email and Username Fields in One Row */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className={settingsBoxClass}>
+                                    <h3 className="text-sm font-semibold mb-2">Email Address</h3>
+                                    <input
+                                        type="email"
+                                        defaultValue="john@example.com"
+                                        className="w-full bg-white/10 dark:bg-white/5 border border-white/20 p-3 rounded-xl text-white placeholder-white/50"
+                                    />
+                                </div>
+                                <div className={settingsBoxClass}>
+                                    <h3 className="text-sm font-semibold mb-2">Username</h3>
+                                    <input
+                                        type="text"
+                                        defaultValue="johndoe"
+                                        className="w-full bg-white/10 dark:bg-white/5 border border-white/20 p-3 rounded-xl text-white placeholder-white/50"
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}
@@ -102,20 +171,26 @@ const Settings = () => {
                                     <h3 className="text-xl font-semibold">Change Password</h3>
                                 </div>
                                 <p className="text-white/70 mb-4">Update your account password securely.</p>
-                                <button className="bg-white text-blue-600 px-4 py-2 rounded-xl font-semibold hover:bg-white/90">
+                                <button className="bg-white text-blue-600 dark:text-blue-500 px-4 py-2 rounded-xl font-semibold hover:bg-white/90">
                                     Change Password
                                 </button>
                             </div>
 
                             <div className={settingsBoxClass}>
-                                <div className="flex items-center gap-4 mb-3">
-                                    <Shield className="w-6 h-6" />
-                                    <h3 className="text-xl font-semibold">Two-Factor Authentication</h3>
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-4">
+                                        <Shield className="w-6 h-6" />
+                                        <div>
+                                            <h3 className="text-xl font-semibold">Two-Factor Authentication</h3>
+                                            <p className="text-white/70">Add extra security to your account with 2FA.</p>
+                                        </div>
+                                    </div>
+                                    <ToggleSwitch
+                                        checked={twoFactorAuth}
+                                        onChange={setTwoFactorAuth}
+                                        label=""
+                                    />
                                 </div>
-                                <p className="text-white/70 mb-4">Add extra security to your account with 2FA.</p>
-                                <button className="bg-white text-blue-600 px-4 py-2 rounded-xl font-semibold hover:bg-white/90">
-                                    Enable 2FA
-                                </button>
                             </div>
 
                             <div className={settingsBoxClass}>
@@ -124,7 +199,7 @@ const Settings = () => {
                                     <h3 className="text-xl font-semibold">Active Sessions</h3>
                                 </div>
                                 <p className="text-white/70 mb-4">Review devices currently signed in to your account.</p>
-                                <button className="bg-white text-blue-600 px-4 py-2 rounded-xl font-semibold hover:bg-white/90">
+                                <button className="bg-white text-blue-600 dark:text-blue-500 px-4 py-2 rounded-xl font-semibold hover:bg-white/90">
                                     View Sessions
                                 </button>
                             </div>
@@ -138,17 +213,17 @@ const Settings = () => {
                             <div className={settingsBoxClass}>
                                 <h3 className="text-lg font-semibold mb-2">Account Visibility</h3>
                                 <p className="text-white/70 mb-4">Set your profile to public or private.</p>
-                                <select className="w-full bg-white/10 border border-white/20 p-3 rounded-xl text-white">
-                                    <option>Public</option>
-                                    <option>Private</option>
-                                    <option>Friends Only</option>
+                                <select className="w-full bg-white dark:bg-white border border-white/20 p-3 rounded-xl text-black dark:text-black">
+                                    <option value="public" className="bg-white text-black">Public</option>
+                                    <option value="private" className="bg-white text-black">Private</option>
+                                    <option value="friends" className="bg-white text-black">Friends Only</option>
                                 </select>
                             </div>
 
                             <div className={settingsBoxClass}>
                                 <h3 className="text-lg font-semibold mb-2">Download My Data</h3>
                                 <p className="text-white/70 mb-4">You can request a copy of your data.</p>
-                                <button className="bg-white text-blue-600 px-4 py-2 rounded-xl font-semibold hover:bg-white/90">
+                                <button className="bg-white text-blue-600 dark:text-blue-500 px-4 py-2 rounded-xl font-semibold hover:bg-white/90">
                                     Request Download
                                 </button>
                             </div>
@@ -165,27 +240,58 @@ const Settings = () => {
                             <h2 className="text-3xl font-bold mb-4">Notification Settings</h2>
 
                             <div className={settingsBoxClass}>
-                                <h3 className="text-lg font-semibold mb-2">Email Notifications</h3>
-                                <label className="flex items-center gap-2">
-                                    <input type="checkbox" defaultChecked className="accent-blue-600 w-4 h-4" />
-                                    Receive emails for updates
-                                </label>
+                                <ToggleSwitch
+                                    checked={emailNotifications}
+                                    onChange={setEmailNotifications}
+                                    label="Email Notifications"
+                                />
+                                <p className="text-white/60 dark:text-white/50 text-sm mt-2">Receive emails for updates</p>
                             </div>
 
                             <div className={settingsBoxClass}>
-                                <h3 className="text-lg font-semibold mb-2">SMS Notifications</h3>
-                                <label className="flex items-center gap-2">
-                                    <input type="checkbox" className="accent-blue-600 w-4 h-4" />
-                                    Receive SMS for important alerts
-                                </label>
+                                <ToggleSwitch
+                                    checked={smsNotifications}
+                                    onChange={setSmsNotifications}
+                                    label="SMS Notifications"
+                                />
+                                <p className="text-white/60 dark:text-white/50 text-sm mt-2">Receive SMS for important alerts</p>
                             </div>
 
                             <div className={settingsBoxClass}>
-                                <h3 className="text-lg font-semibold mb-2">Push Notifications</h3>
-                                <label className="flex items-center gap-2">
-                                    <input type="checkbox" className="accent-blue-600 w-4 h-4" />
-                                    Enable app notifications
-                                </label>
+                                <ToggleSwitch
+                                    checked={pushNotifications}
+                                    onChange={setPushNotifications}
+                                    label="Push Notifications"
+                                />
+                                <p className="text-white/60 dark:text-white/50 text-sm mt-2">Enable app notifications</p>
+                            </div>
+
+                            {/* Notification-specific toggles */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+                                <div className="bg-white/10 dark:bg-white/5 rounded-xl p-4 flex items-center justify-between border border-white/20">
+                                    <span className="text-white/80 text-sm">Get updates from people you follow</span>
+                                    <ToggleSwitch
+                                        checked={followedUsers}
+                                        onChange={setFollowedUsers}
+                                        label=""
+                                    />
+                                </div>
+                                <div className="bg-white/10 dark:bg-white/5 rounded-xl p-4 flex items-center justify-between border border-white/20">
+                                    <span className="text-white/80 text-sm">Get alerts from nearby users</span>
+                                    <ToggleSwitch
+                                        checked={localPosts}
+                                        onChange={setLocalPosts}
+                                        label=""
+                                    />
+                                </div>
+                                <div className="bg-white/10 dark:bg-white/5 rounded-xl p-4 flex items-center justify-between border border-white/20">
+                                    <span className="text-white/80 text-sm">Get notified of general site activity</span>
+                                    <ToggleSwitch
+                                        checked={generalActivity}
+                                        onChange={setGeneralActivity}
+                                        label=""
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}
@@ -195,22 +301,26 @@ const Settings = () => {
                             <h2 className="text-3xl font-bold mb-4">Appearance</h2>
 
                             <div className={settingsBoxClass}>
-                                <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                                    <Moon className="w-4 h-4" />
-                                    Dark Mode
-                                </h3>
-                                <label className="flex items-center gap-2">
-                                    <input type="checkbox" defaultChecked className="accent-blue-600 w-4 h-4" />
-                                    Enable dark mode
-                                </label>
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <Moon className="w-4 h-4" />
+                                        <h3 className="text-lg font-semibold">Dark Mode</h3>
+                                    </div>
+                                    <ToggleSwitch
+                                        checked={isDarkMode}
+                                        onChange={toggleDarkMode}
+                                        label=""
+                                    />
+                                </div>
+                                <p className="text-white/60 dark:text-white/50 text-sm">Enable dark mode interface</p>
                             </div>
 
                             <div className={settingsBoxClass}>
                                 <h3 className="text-lg font-semibold mb-2">Theme Color</h3>
-                                <select className="w-full bg-white/10 border border-white/20 p-3 rounded-xl text-white">
-                                    <option>Default</option>
-                                    <option>Ocean Blue</option>
-                                    <option>Dark Emerald</option>
+                                <select className="w-full bg-white dark:bg-white border border-white/20 p-3 rounded-xl text-black dark:text-black">
+                                    <option value="default" className="bg-white text-black">Default</option>
+                                    <option value="ocean" className="bg-white text-black">Ocean Blue</option>
+                                    <option value="emerald" className="bg-white text-black">Dark Emerald</option>
                                 </select>
                             </div>
 
@@ -219,9 +329,7 @@ const Settings = () => {
                                     <Trash2 className="w-4 h-4" />
                                     Deactivate / Delete Account
                                 </h3>
-                                <p className="text-white/70 mb-4">
-                                    Deleting your account is permanent and cannot be undone.
-                                </p>
+                                <p className="text-white/70 mb-4">Deleting your account is permanent and cannot be undone.</p>
                                 <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-semibold">
                                     Delete Account
                                 </button>
@@ -231,11 +339,11 @@ const Settings = () => {
                 </div>
 
                 {/* Footer Buttons */}
-                <div className="flex justify-center gap-4 mt-10">
-                    <button className="px-8 py-4 bg-white/20 border border-white/30 rounded-2xl hover:bg-white/30 transition-all">
+                <div className="flex flex-col sm:flex-row justify-center gap-4 mt-10">
+                    <button className="px-4 py-2 text-white border border-white/30 rounded-xl bg-transparent hover:bg-white/10 transition">
                         Cancel
                     </button>
-                    <button className="px-8 py-4 bg-white text-blue-600 rounded-2xl font-semibold hover:bg-white/90 shadow-lg">
+                    <button className="px-4 py-2 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition">
                         Save Changes
                     </button>
                 </div>
