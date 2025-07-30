@@ -1,6 +1,8 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route , Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from './Context/ThemeContext'; // Provides dark mode globally
+import "./index.css";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -23,6 +25,7 @@ import Announcements from './pages/admin/Announcements';
 import Analytics from './pages/admin/Analytics';
 import AdminSettings from './pages/admin/Settings';
 import AdminProfile from './pages/admin/Profile';
+import ReportIssue from "./pages/User/ReportIssue.tsx";
 import AboutPage from "./pages/AboutPage.tsx";
 import ContactPage from "./pages/ContactPage.tsx";
 
@@ -31,7 +34,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
     <QueryClientProvider client={queryClient}>
-
+        <ThemeProvider> {/* Provides dark mode globally */}
             <BrowserRouter>
                 <div className="min-h-screen bg-gray-50 flex flex-col">
 
@@ -55,9 +58,10 @@ const App = () => (
                             <Route path="/admin-dashboard" element={<AdminDashboard />} />
                             <Route path="/report/:id" element={<ReportDetails />} />
 
-                            <Route path="/admin/dashboard" element={<AdminDashboard />} />
                             <Route path="/admin/reports" element={<ManageReports />} />
                             <Route path="/admin/flagged" element={<FlaggedPosts />} />
+                            <Route path="/pages/about" element={<AboutPage />} />
+                            <Route path="/pages/contact" element={<ContactPage />} />
                             <Route path="/admin/content" element={<ContentManagement />} />
                             <Route path="/admin/announcements" element={<Announcements />} />
                             <Route path="/admin/analytics" element={<Analytics />} />
@@ -73,7 +77,7 @@ const App = () => (
 
                 </div>
             </BrowserRouter>
-
+        </ThemeProvider>
     </QueryClientProvider>
 );
 
