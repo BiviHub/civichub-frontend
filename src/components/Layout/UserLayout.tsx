@@ -12,6 +12,7 @@ import {
     AlertCircle,
 } from "lucide-react";
 import { Link, useLocation, Outlet } from "react-router-dom";
+import { logout } from '../../services/authService';
 import UserNavbar from "./UserNavbar";
 
 const menuItems = [
@@ -19,7 +20,6 @@ const menuItems = [
     { name: "MyPosts", path: "/user/posts", icon: <FileText className="w-5 h-5 text-white" /> },
     { name: "Settings", path: "/user/settings", icon: <Settings className="w-5 h-5 text-white" /> },
     { name: "Profile", path: "/user/profile", icon: <User className="w-5 h-5 text-white" /> },
-    { name: "Logout", path: "/user/logout", icon: <LogOutIcon className="w-5 h-5 text-white" /> },
     {
         name: "Notification",
         path: "#",
@@ -36,7 +36,7 @@ const UserLayout = () => {
     const [collapsed, setCollapsed] = useState(false);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
-    const [showReportIssue, setShowReportIssue] = useState(false); // New state for ReportIssue
+    const [showReportIssue, setShowReportIssue] = useState(false);
     const location = useLocation();
 
     const handleNotificationClick = () => {
@@ -45,6 +45,16 @@ const UserLayout = () => {
 
     const handleReportIssueClick = () => {
         setShowReportIssue(true);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
     };
 
     return (
@@ -59,7 +69,7 @@ const UserLayout = () => {
 
             {/* Sidebar */}
             <div
-                className={`fixed md:static top-0 left-0 z-50 h-full bg-gradient-to-b from-blue-600 to-green-600 dark:bg-gradient-to-b dark:from-gray-900 dark:to-gray-800 text-white transition-transform duration-300 ${
+                className={`fixed md:static top-0 left-0 z-50 h-full bg-gradient-to-b from-blue-600 to-green-600 dark:from-gray-900 dark:to-gray-800 text-white transition-transform duration-300 ${
                     collapsed ? "md:w-16" : "md:w-64"
                 } ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
             >
@@ -116,6 +126,15 @@ const UserLayout = () => {
                             </Link>
                         )
                     )}
+
+                    {/* Logout button (not in menuItems array) */}
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center space-x-3 px-4 py-2 text-left hover:bg-white/10 dark:hover:bg-white/5 w-full text-red-200 mt-auto"
+                    >
+                        <LogOutIcon className="w-5 h-5 text-white" />
+                        {!collapsed && <span className="text-sm">Logout</span>}
+                    </button>
                 </nav>
             </div>
 

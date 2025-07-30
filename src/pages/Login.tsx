@@ -1,13 +1,24 @@
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, LogIn } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
+import { login } from '../services/authService';
+
+
+interface DecodedToken {
+    role?: string;
+    [key: string]: string | undefined; // or `unknown` if you prefer
+}
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         try {
@@ -22,7 +33,7 @@ const Login = () => {
             if (role?.toLowerCase() === 'admin') {
                 navigate('/admin-dashboard');
             } else {
-                navigate('/newsfeed');
+                navigate('/User/news');
             }
         } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response) {
@@ -50,7 +61,13 @@ const Login = () => {
                 </div>
 
                 <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">Welcome Back</h2>
-                <p className="text-center text-sm text-gray-500 mb-6">Login to continue reporting civic issues</p>
+                <p className="text-center text-sm text-gray-500 mb-6">
+                    Login to continue reporting civic issues
+                </p>
+
+                {error && (
+                    <p className="text-red-500 text-center text-sm mb-4">{error}</p>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="relative">
@@ -99,3 +116,4 @@ const Login = () => {
 };
 
 export default Login;
+

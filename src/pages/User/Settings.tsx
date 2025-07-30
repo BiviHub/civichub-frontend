@@ -12,7 +12,7 @@ import {
     Moon,
     Camera,
 } from 'lucide-react';
-import { useTheme } from '../../Context/ThemeContext.tsx';
+import { useTheme } from '../../Context/useTheme';
 
 const Settings = () => {
     const [activeTab, setActiveTab] = useState('profile');
