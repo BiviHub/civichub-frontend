@@ -1,32 +1,59 @@
 import { useState } from 'react';
-import { Mail, Lock, UserPlus } from 'lucide-react';
+import { Mail, Lock, UserPlus, Phone, MapPin, User, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { registerAdmin } from '../services/authService';
+import { AxiosError } from 'axios';
 
 const AdminRegister = () => {
     const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
         email: '',
+        phoneNumber: '',
+        gender: '',
+        address: '',
         password: '',
         confirmPassword: '',
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
 
         if (formData.password !== formData.confirmPassword) {
-            alert('Passwords do not match');
+            setError('Passwords do not match');
             return;
         }
 
-        // 🛠️ Backend will later assign admin role
-        console.log('Admin Registration:', formData);
-
-        // Temporary: redirect to login
-        window.location.href = '/login';
+        try {
+            await registerAdmin(formData);
+            alert('Admin registered successfully!');
+            navigate('/login');
+        } catch (err) {
+            const axiosError = err as AxiosError;
+            if (axiosError.response?.data) {
+                const data = axiosError.response.data;
+                if (typeof data === 'string') {
+                    setError(data);
+                } else if (typeof data === 'object' && 'errors' in data) {
+                    const errors = data.errors as Record<string, string[]>;
+                    const messages = Object.values(errors).flat().join('\n');
+                    setError(messages);
+                } else {
+                    setError('Registration failed. Please try again.');
+                }
+            } else {
+                setError('An unexpected error occurred.');
+            }
+        }
     };
 
     return (
@@ -42,51 +69,37 @@ const AdminRegister = () => {
                         <UserPlus className="w-8 h-8 text-white" />
                     </div>
                 </div>
-
                 <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">Admin Registration</h2>
                 <p className="text-center text-sm text-gray-500 mb-6">
                     Register to manage users and civic operations.
                 </p>
-
+                {error && <div className="mb-4 text-red-500 text-sm">{error}</div>}
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    <InputField icon={<User />} name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleChange} />
+                    <InputField icon={<User />} name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleChange} />
+                    <InputField icon={<Mail />} name="email" placeholder="Email" value={formData.email} onChange={handleChange} type="email" />
+                    <InputField icon={<Phone />} name="phoneNumber" placeholder="Phone Number" value={formData.phoneNumber} onChange={handleChange} />
+
+                    {/* Gender dropdown styled to match input fields */}
                     <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <input
-                            type="email"
-                            name="email"
-                            placeholder="Admin email"
-                            value={formData.email}
+                        <ChevronDown className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        <select
+                            name="gender"
+                            value={formData.gender}
                             onChange={handleChange}
                             required
-                            className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
+                            className="appearance-none pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        >
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
                     </div>
 
-                    <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <input
-                            type="password"
-                            name="password"
-                            placeholder="Create a password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            required
-                            className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                    </div>
-
-                    <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <input
-                            type="password"
-                            name="confirmPassword"
-                            placeholder="Confirm password"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            required
-                            className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                    </div>
+                    <InputField icon={<MapPin />} name="address" placeholder="Address" value={formData.address} onChange={handleChange} />
+                    <InputField icon={<Lock />} name="password" placeholder="Create a password" value={formData.password} onChange={handleChange} type="password" />
+                    <InputField icon={<Lock />} name="confirmPassword" placeholder="Confirm password" value={formData.confirmPassword} onChange={handleChange} type="password" />
 
                     <button
                         type="submit"
@@ -95,7 +108,6 @@ const AdminRegister = () => {
                         Register as Admin
                     </button>
                 </form>
-
                 <p className="text-center text-sm text-gray-500 mt-6">
                     Already registered?{' '}
                     <Link to="/login" className="text-blue-600 hover:underline">
@@ -108,3 +120,39 @@ const AdminRegister = () => {
 };
 
 export default AdminRegister;
+
+const InputField = ({
+                        icon,
+                        name,
+                        placeholder,
+                        value,
+                        onChange,
+                        type = 'text',
+                    }: {
+    icon: React.ReactNode;
+    name: string;
+    placeholder: string;
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    type?: string;
+}) => (
+    <div className="relative">
+        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+            {icon}
+        </div>
+        <input
+            type={type}
+            name={name}
+            placeholder={placeholder}
+            value={value}
+            onChange={onChange}
+            required
+            className="pl-10 pr-4 py-2 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+    </div>
+);
+
+
+
+
+

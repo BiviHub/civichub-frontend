@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { logout } from '../services/authService';
+
 import {
     User,
     FileText,
@@ -23,7 +25,8 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
 
     useEffect(() => {
         onToggle?.(isExpanded);
-    }, [isExpanded]);
+    }, [isExpanded, onToggle]);
+
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -44,8 +47,21 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
         { to: '/profile', label: 'Profile', icon: <User className="w-5 h-5" /> },
         { to: '/my-posts', label: 'My Posts', icon: <FileText className="w-5 h-5" /> },
         { to: '/settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
-        { to: '/logout', label: 'Logout', icon: <LogOut className="w-5 h-5" />, danger: true },
-    ];
+        {
+            to: '#',
+            label: 'Logout',
+            icon: <LogOut className="w-5 h-5" />,
+            danger: true,
+            onClick: async () => {
+                try {
+                    await logout();
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
+                } catch (error) {
+                    console.error('Logout failed:', error);
+                }
+            },
+        },    ];
 
     return (
         <>
@@ -79,25 +95,43 @@ const Sidebar = ({ onToggle }: SidebarProps) => {
 
                 {/* Links */}
                 <ul className="mt-6 px-2 space-y-2">
-                    {links.map(({ to, label, icon, danger }) => {
+                    {links.map(({ to, label, icon, danger, onClick }) => {
                         const isActive = location.pathname === to;
+
                         return (
                             <li key={to}>
-                                <Link
-                                    to={to}
-                                    title={!isExpanded ? label : ''}
-                                    className={`group flex items-center gap-3 px-3 py-2 rounded-md transition-all
-                  ${isActive ? 'bg-white/30 font-semibold' : 'hover:bg-white/20'}
-                  ${danger ? 'text-red-200 hover:bg-red-500/30' : 'text-white'}
-                `}
-                                >
-                                    <span className="transition-transform group-hover:scale-110">{icon}</span>
-                                    {isExpanded && <span className="truncate">{label}</span>}
-                                </Link>
+                                {onClick ? (
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            onClick();
+                                        }}
+                                        title={!isExpanded ? label : ''}
+                                        className={`w-full text-left group flex items-center gap-3 px-3 py-2 rounded-md transition-all
+                            ${danger ? 'text-red-200 hover:bg-red-500/30' : 'text-white hover:bg-white/20'}
+                        `}
+                                    >
+                                        <span className="transition-transform group-hover:scale-110">{icon}</span>
+                                        {isExpanded && <span className="truncate">{label}</span>}
+                                    </button>
+                                ) : (
+                                    <Link
+                                        to={to}
+                                        title={!isExpanded ? label : ''}
+                                        className={`group flex items-center gap-3 px-3 py-2 rounded-md transition-all
+                            ${isActive ? 'bg-white/30 font-semibold' : 'hover:bg-white/20'}
+                            ${danger ? 'text-red-200 hover:bg-red-500/30' : 'text-white'}
+                        `}
+                                    >
+                                        <span className="transition-transform group-hover:scale-110">{icon}</span>
+                                        {isExpanded && <span className="truncate">{label}</span>}
+                                    </Link>
+                                )}
                             </li>
                         );
                     })}
                 </ul>
+
             </aside>
         </>
     );

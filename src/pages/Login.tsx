@@ -10,11 +10,29 @@ const Login = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // 🔒 Later: connect to backend login API
-        console.log('Login:', { email, password });
+        try {
+            const result = await login({ email, password });
+            localStorage.setItem('token', result.token);
 
-        // Redirect user to newsfeed after login (temporary logic)
-        window.location.href = '/user/news';
+            const decoded = jwtDecode<DecodedToken>(result.token);
+            const role =
+                decoded.role ||
+                decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+
+            if (role?.toLowerCase() === 'admin') {
+                navigate('/admin-dashboard');
+            } else {
+                navigate('/newsfeed');
+            }
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err) && err.response) {
+                setError(err.response.data || 'Login failed.');
+            } else if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError('Login failed. Please try again.');
+            }
+        }
     };
 
     return (
