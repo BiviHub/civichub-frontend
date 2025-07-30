@@ -17,12 +17,14 @@ import AdminRegister from './pages/AdminRegister';
 import TwoFactorSettings from './pages/TwoFactorSettings';
 import FlaggedPosts from "./pages/admin/FlaggedPosts.tsx";
 import ManageReports from './pages/admin/ManageReports';
-import Users from './pages/admin/Users';
+import AllUsers from './pages/admin/AllUsers';
 import ContentManagement from './pages/admin/ContentManagement';
 import Announcements from './pages/admin/Announcements';
 import Analytics from './pages/admin/Analytics';
 import AdminSettings from './pages/admin/Settings';
 import AdminProfile from './pages/admin/Profile';
+import AboutPage from "./pages/AboutPage.tsx";
+import ContactPage from "./pages/ContactPage.tsx";
 
 
 const queryClient = new QueryClient();
@@ -40,10 +42,12 @@ const App = () => (
                             <Route path="/register" element={<Register />} />
                             <Route path={"/admin-register"} element={<AdminRegister />} /> {/* ✅ Admin Route */}
                             <Route path="/two-factor-settings" element={<TwoFactorSettings />} />
-
+                            <Route path="/AboutPage" element={<AboutPage />} />
+                            <Route path="/ContactPage" element={<ContactPage />} />
                             <Route path="/forgot-password" element={<ForgotPassword />} />
                             <Route path="/reset-password" element={<ResetPassword />} />
-                            <Route path="/my-posts" element={<MyPosts />} />
+
+                            <Route path="/admin/users" element={<AllUsers />} />                            <Route path="/my-posts" element={<MyPosts />} />
                             {/* Authenticated Routes (Simulated for now) */}
                             <Route path="/newsfeed" element={<NewsFeed />} />
                             <Route path="/profile" element={<Profile />} />
@@ -54,7 +58,6 @@ const App = () => (
                             <Route path="/admin/dashboard" element={<AdminDashboard />} />
                             <Route path="/admin/reports" element={<ManageReports />} />
                             <Route path="/admin/flagged" element={<FlaggedPosts />} />
-                            <Route path="/admin/users" element={<Users />} />
                             <Route path="/admin/content" element={<ContentManagement />} />
                             <Route path="/admin/announcements" element={<Announcements />} />
                             <Route path="/admin/analytics" element={<Analytics />} />

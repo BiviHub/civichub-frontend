@@ -1,8 +1,9 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, FileText, Flag, Users, FileCog, Megaphone,
-    BarChart3, Settings, User
+    BarChart3, Settings, User, LogOut
 } from 'lucide-react';
+import { logout } from '../services/authService';
 
 const adminLinks = [
     { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -18,26 +19,51 @@ const adminLinks = [
 
 const AdminSidebar = () => {
     const location = useLocation();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await logout(); // call backend API
+            localStorage.removeItem('token'); // clear token
+            navigate('/login'); // redirect
+        } catch (err) {
+            console.error('Logout failed:', err);
+        }
+    };
 
     return (
-        <div className="fixed top-0 left-0 h-full w-64 bg-gradient-to-br from-blue-600 to-green-600 text-white shadow-lg z-50">
-            <div className="text-2xl font-bold px-6 py-4 border-b border-white/20">Admin Panel</div>
-            <nav className="mt-6 flex flex-col gap-1 px-4">
-                {adminLinks.map(({ label, path, icon: Icon }) => (
-                    <Link
-                        key={path}
-                        to={path}
-                        className={`flex items-center gap-3 px-4 py-2 rounded-lg transition hover:bg-white/10 ${
-                            location.pathname === path ? 'bg-white/10' : ''
-                        }`}
-                    >
-                        <Icon className="w-5 h-5" />
-                        <span>{label}</span>
-                    </Link>
-                ))}
-            </nav>
+        <div className="fixed top-0 left-0 h-full w-64 bg-gradient-to-br from-blue-600 to-green-600 text-white shadow-lg z-50 flex flex-col justify-between">
+            <div>
+                <div className="text-2xl font-bold px-6 py-4 border-b border-white/20">Admin Panel</div>
+                <nav className="mt-6 flex flex-col gap-1 px-4">
+                    {adminLinks.map(({ label, path, icon: Icon }) => (
+                        <Link
+                            key={path}
+                            to={path}
+                            className={`flex items-center gap-3 px-4 py-2 rounded-lg transition hover:bg-white/10 ${
+                                location.pathname === path ? 'bg-white/10' : ''
+                            }`}
+                        >
+                            <Icon className="w-5 h-5" />
+                            <span>{label}</span>
+                        </Link>
+                    ))}
+                </nav>
+            </div>
+
+            <div className="px-4 py-6">
+                <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-2 rounded-lg border border-white/30 hover:bg-white/10 transition text-white"
+                >
+                    <LogOut className="w-5 h-5" />
+                    <span>Logout</span>
+                </button>
+            </div>
         </div>
     );
 };
 
 export default AdminSidebar;
+
+
