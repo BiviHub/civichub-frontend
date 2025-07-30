@@ -20,18 +20,31 @@ const menuItems = [
     { name: "Settings", path: "/user/settings", icon: <Settings className="w-5 h-5 text-white" /> },
     { name: "Profile", path: "/user/profile", icon: <User className="w-5 h-5 text-white" /> },
     { name: "Logout", path: "/user/logout", icon: <LogOutIcon className="w-5 h-5 text-white" /> },
-    { name: "Notification", path: "#", icon: <Bell className="w-5 h-5 text-white" /> },
-    { name: "ReportIssue", path: "/user/report", icon: <AlertCircle className="w-5 h-5 text-white" /> },
+    {
+        name: "Notification",
+        path: "#",
+        icon: <Bell className="w-5 h-5 text-white" />,
+    },
+    {
+        name: "ReportIssue",
+        path: "#",
+        icon: <AlertCircle className="w-5 h-5 text-white" />,
+    },
 ];
 
 const UserLayout = () => {
     const [collapsed, setCollapsed] = useState(false);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [showReportIssue, setShowReportIssue] = useState(false); // New state for ReportIssue
     const location = useLocation();
 
     const handleNotificationClick = () => {
         setShowNotifications(true);
+    };
+
+    const handleReportIssueClick = () => {
+        setShowReportIssue(true);
     };
 
     return (
@@ -75,6 +88,15 @@ const UserLayout = () => {
                             <button
                                 key={item.name}
                                 onClick={handleNotificationClick}
+                                className="flex items-center space-x-3 px-4 py-2 text-left hover:bg-white/10 dark:hover:bg-white/5 w-full"
+                            >
+                                <span>{item.icon}</span>
+                                {!collapsed && <span className="text-sm">{item.name}</span>}
+                            </button>
+                        ) : item.name === "ReportIssue" ? (
+                            <button
+                                key={item.name}
+                                onClick={handleReportIssueClick}
                                 className="flex items-center space-x-3 px-4 py-2 text-left hover:bg-white/10 dark:hover:bg-white/5 w-full"
                             >
                                 <span>{item.icon}</span>
@@ -141,6 +163,36 @@ const UserLayout = () => {
                                 <div className="flex justify-end mt-3">
                                     <button className="px-3 py-1 text-sm text-white font-medium rounded-md bg-gradient-to-r from-blue-600 to-green-500 hover:opacity-90 transition duration-300">
                                         Mark all as read
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ReportIssue Modal */}
+                    {showReportIssue && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                            <div className="bg-white/15 dark:bg-white/5 rounded-2xl shadow-2xl p-4 w-[90%] max-w-md transform transition-all duration-300 scale-95 opacity-0 animate-fadeInScale border border-white/20 backdrop-blur-xl">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h2 className="text-lg font-bold text-white">Report an Issue</h2>
+                                    <button
+                                        onClick={() => setShowReportIssue(false)}
+                                        className="text-white/60 hover:text-red-500"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="bg-white/10 dark:bg-white/5 p-2 rounded-md text-sm text-white/70">
+                                        This is a placeholder for reporting issues.
+                                    </div>
+                                </div>
+                                <div className="flex justify-end mt-3">
+                                    <button
+                                        onClick={() => setShowReportIssue(false)}
+                                        className="px-3 py-1 text-sm text-white font-medium rounded-md bg-gradient-to-r from-blue-600 to-green-500 hover:opacity-90 transition duration-300"
+                                    >
+                                        Close
                                     </button>
                                 </div>
                             </div>

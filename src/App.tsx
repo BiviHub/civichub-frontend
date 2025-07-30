@@ -27,6 +27,7 @@ import Profile from './pages/User/Profile';
 import Settings from './pages/User/Settings';
 import MyPosts from './pages/User/MyPosts';
 import Notification from "./pages/User/Notification";
+import ReportIssue from "./pages/User/ReportIssue.tsx";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
                                 <Route path="settings" element={<Settings />} />
                                 <Route path="posts" element={<MyPosts />} />
                                 <Route path="notification" element={<Notification />} />
+                                <Route path="report" element={<ReportIssue />} />
                             </Route>
 
                             {/* Fallback */}
