@@ -45,4 +45,39 @@ export interface UserDTO {
     profilePictureUrl?: string; // Optional: may be null or missing
     role: string;
 }
-
+export interface FlaggedReportDTO {
+    reportId: number;
+    flaggedByUserId: string;
+    reason: string;
+    flaggedBy: string;
+    isReviewed: boolean;
+}
+export interface ReportPhoto {
+    id: number;
+    photoUrl: string;
+}
+export interface CommentDTO {
+    id: number;
+    content?: string;
+    userName?: string;
+    dateCreated: string; // ISO string format from DateTime
+    parentCommentId?: number;
+    replies: CommentDTO[];
+}
+export interface ReactionDTO {
+    id: number;
+    type: string;
+    reactedBy: string;
+    reactedAt: string;
+}
+export interface ReportDTO {
+    id: number;
+    location?: string;
+    description?: string;
+    citizenId: string;
+    citizenName?: string;
+    dateCreated: string;
+    photos: ReportPhoto[];
+    comments: CommentDTO[];
+    reactions: ReactionDTO[];
+}
