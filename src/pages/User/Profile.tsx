@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pencil, X } from "lucide-react";
-import { useTheme } from "../../Context/ThemeContext.tsx";
+import { useTheme } from "../../Context/useTheme";
 
 const Profile = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);

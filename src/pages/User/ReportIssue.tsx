@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X, AlertTriangle, Upload, Image, Video, FileText, Send } from "lucide-react";
-import { useTheme } from "../../Context/ThemeContext.tsx";
+import { useTheme } from "../../Context/useTheme";
 
 const ReportIssue = () => {
     useTheme();
