@@ -4,6 +4,8 @@ import type { RegisterDTO } from '../types/AuthTypes';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Phone, Home, UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
+import axios from 'axios';
+
 
 const Register: React.FC = () => {
     const navigate = useNavigate();
@@ -19,6 +21,7 @@ const Register: React.FC = () => {
         confirmPassword: ''
     });
 
+
     const [error, setError] = useState<string | null>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -27,6 +30,8 @@ const Register: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+
         if (formData.password !== formData.confirmPassword) {
             setError('Passwords do not match');
             return;
@@ -36,13 +41,25 @@ const Register: React.FC = () => {
             await registerUser(formData);
             navigate('/login');
         } catch (err: unknown) {
-            if (err instanceof Error) {
-                setError(err.message || 'Registration failed');
+            if (axios.isAxiosError(err)) {
+                if (err.response?.data?.error) {
+                    setError(err.response.data.error);
+                } else if (err.response?.data?.errors) {
+                    const firstErrorKey = Object.keys(err.response.data.errors)[0];
+                    const firstErrorMsg = err.response.data.errors[firstErrorKey][0];
+                    setError(firstErrorMsg);
+                } else {
+                    setError(err.message || 'Registration failed');
+                }
+            } else if (err instanceof Error) {
+                setError(err.message);
             } else {
                 setError('An unexpected error occurred');
             }
         }
     };
+
+
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4">

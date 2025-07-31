@@ -6,7 +6,7 @@ import {
 import { logout } from '../services/authService';
 
 const adminLinks = [
-    { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+    { label: 'Dashboard', path: '/admin-dashboard', icon: LayoutDashboard },
     { label: 'Manage Reports', path: '/admin/reports', icon: FileText },
     { label: 'Flagged Posts', path: '/admin/flagged', icon: Flag },
     { label: 'Users', path: '/admin/users', icon: Users },

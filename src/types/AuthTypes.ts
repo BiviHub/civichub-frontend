@@ -45,4 +45,10 @@ export interface UserDTO {
     profilePictureUrl?: string; // Optional: may be null or missing
     role: string;
 }
-
+export interface AdminDashboardDTO {
+    reportsCount: number;
+    usersCount: number;
+    flaggedPostCount: number;
+    reviewedFlaggedCount: number;
+    weeklyActivitiesCount: number;
+}
