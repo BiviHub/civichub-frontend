@@ -5,7 +5,8 @@ import type {
     UserDTO,
     AdminRegisterDTO,
     ForgotPasswordDTO,
-    ResetPasswordDTO
+    ResetPasswordDTO,
+    AdminDashboardDTO
 } from '../types/AuthTypes';
 
 export const login = async (loginData: LoginDTO) => {
@@ -54,6 +55,10 @@ export const resetPassword = async (data: ResetPasswordDTO): Promise<{ message: 
 
 export const getAllUsers = async (): Promise<UserDTO[]> => {
     const response = await api.get('/Account/AllUsers');
+    return response.data;
+};
+export const getAdminDashboard = async (): Promise<AdminDashboardDTO> => {
+    const response = await api.get('/Admin/AdminDashboard');
     return response.data;
 };
 
