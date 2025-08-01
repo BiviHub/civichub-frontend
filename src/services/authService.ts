@@ -5,6 +5,7 @@ import type {
     UserDTO,
     AdminRegisterDTO,
     ForgotPasswordDTO,
+    FlaggedReportDTO,
     ResetPasswordDTO,
     AdminDashboardDTO
 } from '../types/AuthTypes';
@@ -62,3 +63,13 @@ export const getAdminDashboard = async (): Promise<AdminDashboardDTO> => {
     return response.data;
 };
 
+
+export const getAllFlaggedReports = async (): Promise<FlaggedReportDTO[]> => {
+    const response = await api.get('/Report/AllFlaggedReport');
+    return response.data;
+};
+
+export const getAllReports = async () => {
+    const response = await api.get('/Report/AllReport');
+    return response.data;
+};
