@@ -81,3 +81,10 @@ export interface ReportDTO {
     comments: CommentDTO[];
     reactions: ReactionDTO[];
 }
+export interface AdminDashboardDTO {
+    reportsCount: number;
+    usersCount: number;
+    flaggedPostCount: number;
+    reviewedFlaggedCount: number;
+    weeklyActivitiesCount: number;
+}

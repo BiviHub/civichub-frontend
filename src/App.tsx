@@ -51,7 +51,8 @@ const App = () => (
                             <Route path="/forgot-password" element={<ForgotPassword />} />
                             <Route path="/reset-password" element={<ResetPassword />} />
 
-                            <Route path="/admin/users" element={<AllUsers />} />                            <Route path="/my-posts" element={<MyPosts />} />
+                            <Route path="/admin/users" element={<AllUsers />} />
+                            <Route path="/my-posts" element={<MyPosts />} />
                             {/* Authenticated Routes (Simulated for now) */}
 
 
