@@ -1,5 +1,5 @@
-import AdminSidebar from '../../components/AdminSidebar';
 import { Plus, Trash2, Pencil } from 'lucide-react';
+import AdminLayout from '../../components/Layout/AdminLayout';
 
 const announcements = [
     {
@@ -16,12 +16,10 @@ const announcements = [
 
 const Announcements = () => {
     return (
-        <div className="flex bg-gradient-to-br from-green-50 to-blue-50 min-h-screen">
-            <AdminSidebar />
-
-            <main className="ml-64 w-full p-6">
+        <AdminLayout>
+            <div className="min-h-screen p-6 bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-white">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-blue-700">Announcements</h1>
+                    <h1 className="text-2xl font-bold text-blue-700 dark:text-white">Announcements</h1>
                     <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm flex items-center">
                         <Plus className="w-4 h-4 mr-1" />
                         New Announcement
@@ -32,26 +30,26 @@ const Announcements = () => {
                     {announcements.map((ann, index) => (
                         <div
                             key={index}
-                            className="bg-white p-4 rounded-xl shadow flex flex-col gap-1 border"
+                            className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow border border-gray-200 dark:border-gray-700"
                         >
                             <div className="flex justify-between items-center">
-                                <h2 className="text-lg font-semibold text-gray-800">{ann.title}</h2>
+                                <h2 className="text-lg font-semibold text-gray-800 dark:text-white">{ann.title}</h2>
                                 <div className="flex gap-2">
-                                    <button className="text-blue-600 hover:text-blue-800">
+                                    <button className="text-blue-600 hover:text-blue-800 dark:hover:text-blue-400">
                                         <Pencil className="w-4 h-4" />
                                     </button>
-                                    <button className="text-red-600 hover:text-red-800">
+                                    <button className="text-red-600 hover:text-red-800 dark:hover:text-red-400">
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
-                            <p className="text-sm text-gray-600">{ann.date}</p>
-                            <p className="text-gray-700 mt-1">{ann.content}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{ann.date}</p>
+                            <p className="text-gray-700 dark:text-gray-300 mt-1">{ann.content}</p>
                         </div>
                     ))}
                 </div>
-            </main>
-        </div>
+            </div>
+        </AdminLayout>
     );
 };
 

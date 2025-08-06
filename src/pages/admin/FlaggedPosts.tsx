@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import AdminSidebar from '../../components/AdminSidebar';
 import { motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 import { getAllFlaggedReports } from '../../services/authService';
-import type {FlaggedReportDTO} from "../../types/AuthTypes.ts";
-
+import type { FlaggedReportDTO } from '../../types/AuthTypes';
+import AdminLayout from '../../components/Layout/AdminLayout';
 
 const FlaggedPosts = () => {
     const [flaggedReports, setFlaggedReports] = useState<FlaggedReportDTO[]>([]);
@@ -26,17 +25,16 @@ const FlaggedPosts = () => {
     }, []);
 
     return (
-        <div className="flex bg-gradient-to-br from-green-50 to-blue-50 min-h-screen">
-            <AdminSidebar />
-            <main className="ml-64 p-6 w-full">
-                <h1 className="text-2xl font-bold text-red-600 mb-6 flex items-center gap-2">
+        <AdminLayout>
+            <div className="min-h-screen p-6 flex flex-col gap-6 bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-white">
+                <h1 className="text-3xl font-bold text-blue-700 dark:text-white flex items-center gap-2">
                     <AlertTriangle className="w-6 h-6" /> Flagged Posts
                 </h1>
 
                 {loading ? (
-                    <div className="text-center text-gray-500">Loading flagged posts...</div>
+                    <div className="text-center text-gray-500 dark:text-gray-400">Loading flagged posts...</div>
                 ) : flaggedReports.length === 0 ? (
-                    <div className="text-center text-gray-500">No flagged posts found.</div>
+                    <div className="text-center text-gray-500 dark:text-gray-400">No flagged posts found.</div>
                 ) : (
                     <motion.div
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -47,17 +45,17 @@ const FlaggedPosts = () => {
                         {flaggedReports.map((flag) => (
                             <div
                                 key={flag.reportId}
-                                className="bg-white p-4 rounded-xl shadow-md border border-gray-100 space-y-2"
+                                className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow border border-gray-200 dark:border-gray-700 space-y-2"
                             >
                                 <div className="text-red-600 font-semibold">Reason: {flag.reason}</div>
-                                <div className="text-gray-600 text-sm">Report ID: {flag.reportId}</div>
-                                <div className="text-gray-800 font-bold">Flagged By: {flag.flaggedBy}</div>
-                                <div className="text-sm text-gray-500">
+                                <div className="text-gray-600 dark:text-gray-400 text-sm">Report ID: {flag.reportId}</div>
+                                <div className="text-gray-800 dark:text-white font-bold">Flagged By: {flag.flaggedBy}</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-300">
                                     Status:{' '}
                                     {flag.isReviewed ? (
                                         <span className="text-green-600 font-semibold flex items-center gap-1">
-                      <CheckCircle className="w-4 h-4" /> Reviewed
-                    </span>
+                                            <CheckCircle className="w-4 h-4" /> Reviewed
+                                        </span>
                                     ) : (
                                         <span className="text-yellow-600 font-semibold">Pending Review</span>
                                     )}
@@ -66,10 +64,9 @@ const FlaggedPosts = () => {
                         ))}
                     </motion.div>
                 )}
-            </main>
-        </div>
+            </div>
+        </AdminLayout>
     );
 };
 
 export default FlaggedPosts;
-

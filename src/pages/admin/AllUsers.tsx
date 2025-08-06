@@ -4,6 +4,8 @@ import type { UserDTO } from '../../types/AuthTypes';
 import { Search, Eye } from 'lucide-react';
 import { Dialog } from '@headlessui/react';
 import { CSVLink } from 'react-csv';
+import AdminLayout from '../../components/Layout/AdminLayout';
+import { motion } from 'framer-motion';
 
 const USERS_PER_PAGE = 5;
 
@@ -48,132 +50,138 @@ const AllUsers = () => {
     const getInitial = (name: string) => name?.charAt(0)?.toUpperCase() || '?';
 
     return (
-        <div className="min-h-screen p-6 bg-gradient-to-br from-green-50 to-blue-50">
-            <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-xl p-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold">All Users</h2>
-                    <CSVLink data={filteredUsers} filename="users.csv" className="text-blue-600 hover:underline">
-                        Export CSV
-                    </CSVLink>
-                </div>
+        <AdminLayout>
+            <div className="min-h-screen p-6 bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-white">
+                <h2 className="text-3xl font-bold text-blue-700 dark:text-white mb-6">All Users</h2>
 
-                <div className="relative mb-6">
-                    <input
-                        type="text"
-                        placeholder="Search users..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm pl-10"
-                    />
-                    <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 max-w-7xl mx-auto">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-semibold dark:text-white">User List</h3>
+                        <CSVLink data={filteredUsers} filename="users.csv" className="text-blue-600 hover:underline dark:text-blue-400">
+                            Export CSV
+                        </CSVLink>
+                    </div>
 
-                <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm text-left">
-                        <thead className="bg-gray-100 border-b font-semibold text-gray-700">
-                        <tr>
-                            <th className="py-2 px-4">Profile</th>
-                            <th className="py-2 px-4">Name</th>
-                            <th className="py-2 px-4">Email</th>
-                            <th className="py-2 px-4">Phone</th>
-                            <th className="py-2 px-4">Gender</th>
-                            <th className="py-2 px-4">Role</th>
-                            <th className="py-2 px-4">Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {paginatedUsers.length === 0 ? (
+                    <div className="relative mb-6">
+                        <input
+                            type="text"
+                            placeholder="Search users..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm pl-10 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        />
+                        <Search className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500" size={18} />
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-sm text-left">
+                            <thead className="bg-gray-100 dark:bg-gray-700 border-b font-semibold text-gray-700 dark:text-white">
                             <tr>
-                                <td colSpan={7} className="text-center py-6 text-gray-500">
-                                    No users found.
-                                </td>
+                                <th className="py-2 px-4">Profile</th>
+                                <th className="py-2 px-4">Name</th>
+                                <th className="py-2 px-4">Email</th>
+                                <th className="py-2 px-4">Phone</th>
+                                <th className="py-2 px-4">Gender</th>
+                                <th className="py-2 px-4">Role</th>
+                                <th className="py-2 px-4">Actions</th>
                             </tr>
-                        ) : (
-                            paginatedUsers.map((user, index) => (
-                                <tr key={index} className="border-b hover:bg-gray-50 transition">
-                                    <td className="py-3 px-4">
-                                        <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-lg">
-                                            {getInitial(user.firstName)}
-                                        </div>
-                                    </td>
-                                    <td className="py-3 px-4">
-                                        {user.firstName} {user.lastName}
-                                    </td>
-                                    <td className="py-3 px-4">{user.email}</td>
-                                    <td className="py-3 px-4">{user.phoneNumber}</td>
-                                    <td className="py-3 px-4">{user.gender}</td>
-                                    <td className="py-3 px-4">{user.role}</td>
-                                    <td className="py-3 px-4">
-                                        <button
-                                            onClick={() => {
-                                                setSelectedUser(user);
-                                                setIsModalOpen(true);
-                                            }}
-                                            className="text-blue-600 hover:underline flex items-center gap-1"
-                                        >
-                                            <Eye size={16} /> View
-                                        </button>
+                            </thead>
+                            <tbody>
+                            {paginatedUsers.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="text-center py-6 text-gray-500 dark:text-gray-400">
+                                        No users found.
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                        </tbody>
-                    </table>
-                </div>
+                            ) : (
+                                paginatedUsers.map((user, index) => (
+                                    <motion.tr
+                                        key={index}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="border-b dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                                    >
+                                        <td className="py-3 px-4">
+                                            <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-lg">
+                                                {getInitial(user.firstName)}
+                                            </div>
+                                        </td>
+                                        <td className="py-3 px-4 text-gray-800 dark:text-gray-200">
+                                            {user.firstName} {user.lastName}
+                                        </td>
+                                        <td className="py-3 px-4 text-gray-800 dark:text-gray-200">{user.email}</td>
+                                        <td className="py-3 px-4 text-gray-800 dark:text-gray-200">{user.phoneNumber}</td>
+                                        <td className="py-3 px-4 text-gray-800 dark:text-gray-200">{user.gender}</td>
+                                        <td className="py-3 px-4 text-gray-800 dark:text-gray-200">{user.role}</td>
+                                        <td className="py-3 px-4">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedUser(user);
+                                                    setIsModalOpen(true);
+                                                }}
+                                                className="text-blue-600 hover:underline dark:text-blue-400 flex items-center gap-1"
+                                            >
+                                                <Eye size={16} /> View
+                                            </button>
+                                        </td>
+                                    </motion.tr>
+                                ))
+                            )}
+                            </tbody>
+                        </table>
+                    </div>
 
-                <div className="flex justify-between items-center mt-4">
-                    <button
-                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
-                        className="px-4 py-2 bg-gray-200 text-sm rounded disabled:opacity-50"
-                    >
-                        Previous
-                    </button>
-                    <span className="text-sm">
-                        Page {currentPage} of {totalPages}
-                    </span>
-                    <button
-                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className="px-4 py-2 bg-gray-200 text-sm rounded disabled:opacity-50"
-                    >
-                        Next
-                    </button>
-                </div>
-            </div>
-
-            {/* ✅ Updated Modal */}
-            <Dialog as={Fragment} open={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    {/* Modal background overlay */}
-                    <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-
-                    {/* Modal content */}
-                    <Dialog.Panel className="z-50 bg-white rounded-lg p-6 max-w-md w-full shadow-lg">
-                        <Dialog.Title className="text-xl font-semibold mb-4">User Details</Dialog.Title>
-                        {selectedUser && (
-                            <div className="space-y-2">
-                                <p><strong>Name:</strong> {selectedUser.firstName} {selectedUser.lastName}</p>
-                                <p><strong>Email:</strong> {selectedUser.email}</p>
-                                <p><strong>Phone:</strong> {selectedUser.phoneNumber}</p>
-                                <p><strong>Gender:</strong> {selectedUser.gender}</p>
-                                <p><strong>Role:</strong> {selectedUser.role}</p>
-                                <p><strong>Address:</strong> {selectedUser.address}</p>
-                            </div>
-                        )}
+                    <div className="flex justify-between items-center mt-4">
                         <button
-                            onClick={() => setIsModalOpen(false)}
-                            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-sm rounded disabled:opacity-50"
                         >
-                            Close
+                            Previous
                         </button>
-                    </Dialog.Panel>
+                        <span className="text-sm dark:text-gray-300">
+                            Page {currentPage} of {totalPages}
+                        </span>
+                        <button
+                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-sm rounded disabled:opacity-50"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
-            </Dialog>
-        </div>
+
+                {/* Modal */}
+                <Dialog as={Fragment} open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center">
+                        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+
+                        <Dialog.Panel className="z-50 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg p-6 max-w-md w-full shadow-lg border dark:border-gray-700">
+                            <Dialog.Title className="text-xl font-semibold mb-4">User Details</Dialog.Title>
+                            {selectedUser && (
+                                <div className="space-y-2">
+                                    <p><strong>Name:</strong> {selectedUser.firstName} {selectedUser.lastName}</p>
+                                    <p><strong>Email:</strong> {selectedUser.email}</p>
+                                    <p><strong>Phone:</strong> {selectedUser.phoneNumber}</p>
+                                    <p><strong>Gender:</strong> {selectedUser.gender}</p>
+                                    <p><strong>Role:</strong> {selectedUser.role}</p>
+                                    <p><strong>Address:</strong> {selectedUser.address}</p>
+                                </div>
+                            )}
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 transition text-white rounded"
+                            >
+                                Close
+                            </button>
+                        </Dialog.Panel>
+                    </div>
+                </Dialog>
+            </div>
+        </AdminLayout>
     );
 };
 
 export default AllUsers;
-
-
