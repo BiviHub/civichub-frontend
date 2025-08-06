@@ -27,7 +27,6 @@ import AdminProfile from './pages/admin/Profile';
 
 import AboutPage from "./pages/AboutPage.tsx";
 import ContactPage from "./pages/ContactPage.tsx";
-import ReportIssue from "./pages/User/ReportIssue";
 import UserLayout from "./components/Layout/UserLayout.tsx";
 
 
@@ -74,7 +73,6 @@ const App = () => (
                                 <Route path="settings" element={<Settings />} />
 
                                 <Route path="profile" element={<Profile />} />
-                                <Route path="report" element={<ReportIssue />} />
                             </Route>
 
 
