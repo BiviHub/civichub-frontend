@@ -1,5 +1,6 @@
-import AdminSidebar from '../../components/AdminSidebar';
+import AdminLayout from '../../components/Layout/AdminLayout';
 import { Users, FileWarning, Activity, MessagesSquare, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Analytics = () => {
     const stats = [
@@ -31,31 +32,33 @@ const Analytics = () => {
     ];
 
     return (
-        <div className="flex bg-gradient-to-br from-green-50 to-blue-50 min-h-screen">
-            <AdminSidebar />
-
-            <main className="ml-64 w-full p-6">
-                <h1 className="text-2xl font-bold text-blue-700 mb-6">Analytics Overview</h1>
+        <AdminLayout>
+            <div className="min-h-screen p-6 bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-white">
+                <h1 className="text-2xl font-bold text-blue-700 dark:text-white mb-6">Analytics Overview</h1>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {stats.map((item, idx) => (
-                        <div
+                        <motion.div
                             key={idx}
-                            className="bg-white shadow rounded-xl p-5 flex items-center justify-between border"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow rounded-xl p-5 flex items-center justify-between"
                         >
                             <div className="space-y-1">
-                                <p className="text-sm text-gray-500">{item.label}</p>
-                                <p className="text-xl font-semibold text-gray-800">{item.value}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-300">{item.label}</p>
+                                <p className="text-xl font-semibold text-gray-800 dark:text-white">{item.value}</p>
                             </div>
-                            <div className="bg-gray-100 p-3 rounded-full">
+                            <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-full">
                                 {item.icon}
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
-            </main>
-        </div>
+            </div>
+        </AdminLayout>
     );
 };
 
 export default Analytics;
+

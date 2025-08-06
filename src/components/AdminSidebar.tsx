@@ -1,10 +1,10 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, FileText, Flag, Users, FileCog, Megaphone,
-    BarChart3, Settings, User, LogOut
+    BarChart3, Settings, User, LogOut, Sun, Moon
 } from 'lucide-react';
 import { logout } from '../services/authService';
-
+import { useTheme } from '../Context/useTheme';
 const adminLinks = [
     { label: 'Dashboard', path: '/admin-dashboard', icon: LayoutDashboard },
     { label: 'Manage Reports', path: '/admin/reports', icon: FileText },
@@ -20,19 +20,20 @@ const adminLinks = [
 const AdminSidebar = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { isDarkMode, toggleDarkMode } = useTheme();
 
     const handleLogout = async () => {
         try {
-            await logout(); // call backend API
-            localStorage.removeItem('token'); // clear token
-            navigate('/login'); // redirect
+            await logout();
+            localStorage.removeItem('token');
+            navigate('/login');
         } catch (err) {
             console.error('Logout failed:', err);
         }
     };
 
     return (
-        <div className="fixed top-0 left-0 h-full w-64 bg-gradient-to-br from-blue-600 to-green-600 text-white shadow-lg z-50 flex flex-col justify-between">
+        <div className="fixed top-0 left-0 h-full w-64 bg-gradient-to-br from-blue-600 to-green-600 dark:from-gray-900 dark:to-gray-800 text-white shadow-lg z-50 flex flex-col justify-between">
             <div>
                 <div className="text-2xl font-bold px-6 py-4 border-b border-white/20">Admin Panel</div>
                 <nav className="mt-6 flex flex-col gap-1 px-4">
@@ -51,7 +52,14 @@ const AdminSidebar = () => {
                 </nav>
             </div>
 
-            <div className="px-4 py-6">
+            <div className="px-4 py-6 flex flex-col gap-4">
+                <button
+                    onClick={toggleDarkMode}
+                    className="w-full flex items-center gap-3 px-4 py-2 rounded-lg border border-white/30 hover:bg-white/10 transition text-white"
+                >
+                    {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                    <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                </button>
                 <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-2 rounded-lg border border-white/30 hover:bg-white/10 transition text-white"
@@ -65,5 +73,6 @@ const AdminSidebar = () => {
 };
 
 export default AdminSidebar;
+
 
 
