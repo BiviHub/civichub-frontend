@@ -13,6 +13,7 @@ import {
     FileText as FileTextIcon,
     Send,
     AlertCircle,
+    Check
 } from "lucide-react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { logout } from "../../services/authService";
@@ -40,25 +41,45 @@ const UserLayout = () => {
     const [reportLocation, setReportLocation] = useState<Location>({ latitude: null, longitude: null, placeName: null });
     const [locationError, setLocationError] = useState<string | null>(null);
     const [description, setDescription] = useState("");
-    const [images, setImages] = useState<File[]>([]);
+    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]); // Handles images and videos
+    const [manualLocation, setManualLocation] = useState<string | null>(null); // For manual correction
 
-    // Get user location when modal opens
-    useEffect(() => {
-        if ("geolocation" in navigator && showReportIssue) {
+    // Fetch location with higher accuracy option
+    const fetchLocation = () => {
+        if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    setReportLocation({
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                        placeName: null,
-                    });
-                    setLocationError(null);
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    console.log("Fetched coordinates:", { latitude, longitude }); // Debug coordinates
+                    setReportLocation({ latitude, longitude, placeName: null });
+
+                    // Fetch place name using OpenStreetMap Nominatim
+                    try {
+                        const res = await fetch(
+                            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
+                        );
+                        const data = await res.json();
+                        setReportLocation((prev) => ({ ...prev, placeName: data.display_name || `${latitude},${longitude}` }));
+                        setLocationError(null);
+                        setManualLocation(null); // Reset manual input on successful fetch
+                    } catch (err) {
+                        setLocationError("Failed to fetch location name.");
+                        console.error("Error fetching location name:", err);
+                    }
                 },
-                () => {
+                (error) => {
                     setLocationError("Unable to retrieve location. Please enable location services.");
                     setReportLocation({ latitude: null, longitude: null, placeName: null });
-                }
+                    console.error("Geolocation error:", error);
+                },
+                { enableHighAccuracy: true, maximumAge: 0 } // Request higher accuracy
             );
+        }
+    };
+
+    useEffect(() => {
+        if (showReportIssue) {
+            fetchLocation();
         }
     }, [showReportIssue]);
 
@@ -72,19 +93,21 @@ const UserLayout = () => {
         }
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            const newImages = Array.from(e.target.files).filter((file) => file.type.startsWith("image/"));
-            setImages((prev) => [...prev, ...newImages].slice(0, 5)); // Limit to 5 images
+            const newFiles = Array.from(e.target.files).filter((file) =>
+                file.type.startsWith("image/") || file.type.startsWith("video/")
+            );
+            setUploadedFiles((prev) => [...prev, ...newFiles].slice(0, 5)); // Limit to 5 files
         }
     };
 
-    const handleDeleteImage = (index: number) => {
-        setImages((prev) => prev.filter((_, i) => i !== index));
+    const handleDeleteFile = (index: number) => {
+        setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
     };
 
     const handleSubmit = () => {
-        console.log("Submitted:", { location: reportLocation, description, images });
+        console.log("Submitted:", { location: reportLocation, description, uploadedFiles, manualLocation });
         setShowReportIssue(false);
     };
 
@@ -186,31 +209,50 @@ const UserLayout = () => {
 
                     {/* Notification Modal */}
                     {showNotifications && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                            <div className="bg-white/15 dark:bg-gray-900/15 rounded-2xl shadow-2xl p-4 w-[90%] max-w-md transform transition-all duration-300 scale-95 opacity-0 animate-fadeInScale border border-white/20 backdrop-blur-xl">
-                                <div className="flex justify-between items-center mb-3">
-                                    <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent dark:text-white">Notifications</h2>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity duration-300">
+                            <div className="bg-white/90 dark:bg-gray-900/90 rounded-3xl shadow-xl p-6 w-[90%] max-w-lg transform transition-all duration-500 ease-out scale-100 hover:scale-105 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-lg">
+                                {/* Header */}
+                                <div className="flex justify-between items-center mb-5">
+                                    <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent dark:text-white tracking-tight">
+                                        Notifications
+                                    </h2>
                                     <button
                                         onClick={() => setShowNotifications(false)}
-                                        className="text-gray-500 dark:text-white/60 hover:text-red-500"
+                                        className="text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 transition-colors duration-200"
                                     >
-                                        <X className="w-5 h-5" />
+                                        <X className="w-6 h-6" />
                                     </button>
                                 </div>
-                                <div className="space-y-2 max-h-[250px] overflow-y-auto">
-                                    <div className="bg-white/10 dark:bg-gray-900/10 p-2 rounded-md text-sm text-gray-800 dark:text-white/70">
-                                        You have a new message.
-                                    </div>
-                                    <div className="bg-white/10 dark:bg-gray-900/10 p-2 rounded-md text-sm text-gray-800 dark:text-white/70">
-                                        Your profile was updated.
-                                    </div>
-                                    <div className="bg-white/10 dark:bg-gray-900/10 p-2 rounded-md text-sm text-gray-800 dark:text-white/70">
-                                        System maintenance at 11PM.
-                                    </div>
+
+                                {/* Notification List */}
+                                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                                    {[
+                                        { message: "You have a new message.", time: "2m ago" },
+                                        { message: "Your profile was updated.", time: "1h ago" },
+                                        { message: "System maintenance at 11PM.", time: "3h ago" },
+                                    ].map((notification, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex items-start gap-3 bg-gray-100/50 dark:bg-gray-800/50 p-3 rounded-xl hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors duration-200 group"
+                                        >
+                                            <Bell className="w-5 h-5 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-1" />
+                                            <div className="flex-1">
+                                                <p className="text-sm text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                                                    {notification.message}
+                                                </p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{notification.time}</p>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                <div className="flex justify-end mt-3">
-                                    <button className="px-3 py-1 text-sm font-medium rounded-md bg-gradient-to-r from-blue-600 to-green-500 text-white hover:opacity-90 transition duration-300 flex items-center gap-1">
-                                        <Send className="w-3 h-3" /> Mark all as read
+
+                                {/* Footer */}
+                                <div className="flex justify-end mt-5">
+                                    <button
+                                        className="px-4 py-2 text-sm font-medium rounded-full bg-gradient-to-r from-blue-600 to-green-500 text-white hover:from-blue-700 hover:to-green-600 transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-md"
+                                        onClick={() => setShowNotifications(false)}
+                                    >
+                                        <Check className="w-4 h-4" /> Mark All as Read
                                     </button>
                                 </div>
                             </div>
@@ -249,31 +291,39 @@ const UserLayout = () => {
                                         />
                                     </div>
 
-                                    {/* Image Upload Area */}
+                                    {/* Image/Video Upload Area */}
                                     <div className="space-y-2">
                                         <label className="flex items-center gap-2 text-gray-800 dark:text-white font-semibold text-base">
                                             <Upload className="w-4 h-4 text-gray-800 dark:text-white" />
-                                            Upload Images (Up to 5)
+                                            Upload Images or Videos (Up to 5)
                                         </label>
                                         <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300">
                                             <input
                                                 type="file"
                                                 multiple
-                                                accept="image/*"
-                                                onChange={handleImageChange}
+                                                accept="image/*,video/*"
+                                                onChange={handleFileChange}
                                                 className="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600"
                                             />
-                                            {images.length > 0 && (
+                                            {uploadedFiles.length > 0 && (
                                                 <div className="mt-4 grid grid-cols-2 gap-2">
-                                                    {images.map((image, index) => (
+                                                    {uploadedFiles.map((file, index) => (
                                                         <div key={index} className="relative">
-                                                            <img
-                                                                src={URL.createObjectURL(image)}
-                                                                alt={`Preview ${index}`}
-                                                                className="w-full h-24 object-cover rounded-lg"
-                                                            />
+                                                            {file.type.startsWith("video") ? (
+                                                                <video
+                                                                    controls
+                                                                    className="w-full h-24 object-cover rounded-lg"
+                                                                    src={URL.createObjectURL(file)}
+                                                                />
+                                                            ) : (
+                                                                <img
+                                                                    src={URL.createObjectURL(file)}
+                                                                    alt={`Preview ${index}`}
+                                                                    className="w-full h-24 object-cover rounded-lg"
+                                                                />
+                                                            )}
                                                             <button
-                                                                onClick={() => handleDeleteImage(index)}
+                                                                onClick={() => handleDeleteFile(index)}
                                                                 className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
                                                             >
                                                                 <X size={14} />
@@ -283,7 +333,7 @@ const UserLayout = () => {
                                                 </div>
                                             )}
                                             <p className="text-gray-500 dark:text-gray-400 text-xs mt-2">
-                                                Support images (PNG, JPG, etc.). Max 5 images.
+                                                Support images (PNG, JPG, etc.) and videos. Max 5 files.
                                             </p>
                                         </div>
                                     </div>
@@ -318,32 +368,31 @@ const UserLayout = () => {
                                         ) : reportLocation.latitude && reportLocation.longitude ? (
                                             <div className="bg-gray-200 dark:bg-gray-800 p-2 rounded-lg text-gray-800 dark:text-white">
                                                 <p>
-                                                    Latitude: {reportLocation.latitude.toFixed(6)}, Longitude: {reportLocation.longitude.toFixed(6)}
+                                                    {manualLocation || reportLocation.placeName || `Latitude: ${reportLocation.latitude.toFixed(6)}, Longitude: ${reportLocation.longitude.toFixed(6)}`}
                                                 </p>
-                                                <button
-                                                    className="mt-1 text-red-500 dark:text-red-400 text-sm hover:underline"
-                                                    onClick={() => setReportLocation({ latitude: null, longitude: null, placeName: null })}
-                                                >
-                                                    Clear Location
-                                                </button>
+                                                <div className="mt-1 flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={manualLocation || ""}
+                                                        onChange={(e) => setManualLocation(e.target.value)}
+                                                        placeholder="Enter correct location (e.g., Abakpa, Enugu)"
+                                                        className="w-full px-2 py-1 border rounded-md text-sm dark:bg-gray-700 dark:text-white"
+                                                    />
+                                                    <button
+                                                        className="text-red-500 dark:text-red-400 text-sm hover:underline"
+                                                        onClick={() => {
+                                                            setReportLocation({ latitude: null, longitude: null, placeName: null });
+                                                            setManualLocation(null);
+                                                        }}
+                                                    >
+                                                        Clear
+                                                    </button>
+                                                </div>
                                             </div>
                                         ) : (
                                             <button
                                                 className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300 flex items-center justify-center gap-2"
-                                                onClick={() =>
-                                                    navigator.geolocation.getCurrentPosition(
-                                                        (position) =>
-                                                            setReportLocation({
-                                                                latitude: position.coords.latitude,
-                                                                longitude: position.coords.longitude,
-                                                                placeName: null,
-                                                            }),
-                                                        () =>
-                                                            setLocationError(
-                                                                "Failed to get location. Please enable location services."
-                                                            )
-                                                    )
-                                                }
+                                                onClick={fetchLocation}
                                             >
                                                 <svg
                                                     xmlns="http://www.w3.org/2000/svg"
