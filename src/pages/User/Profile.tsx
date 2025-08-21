@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react"; // Added useRef
 import { Pencil, X } from "lucide-react";
 import { useTheme } from "../../Context/useTheme";
 
 const Profile = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [previewImage, setPreviewImage] = useState<string | null>(null); // State for image preview
+    const fileInputRef = useRef<HTMLInputElement>(null); // Ref for file input
     useTheme();
 
     const profileData = [
@@ -29,6 +31,29 @@ const Profile = () => {
         { label: "Date of Birth", value: "1998-01-10", type: "date" },
         { label: "Gender", value: "Male" },
     ];
+
+    // Handle file selection and preview
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file && file.type.startsWith("image/")) {
+            const imageUrl = URL.createObjectURL(file);
+            setPreviewImage(imageUrl);
+        }
+    };
+
+    // Trigger file input click
+    const handleChangePhotoClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    // Clean up preview URL when modal closes
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        if (previewImage) {
+            URL.revokeObjectURL(previewImage); // Free memory
+            setPreviewImage(null);
+        }
+    };
 
     return (
         <div className="p-6 md:p-10 min-h-screen bg-gradient-to-br from-blue-600 to-green-500 dark:from-gray-900 dark:to-black text-white">
@@ -70,7 +95,7 @@ const Profile = () => {
                     {/* Backdrop */}
                     <div
                         className="fixed inset-0 bg-black/30"
-                        onClick={() => setIsModalOpen(false)}
+                        onClick={handleCloseModal} // Updated to clean up preview
                     ></div>
 
                     {/* Modal Content */}
@@ -79,7 +104,7 @@ const Profile = () => {
                     >
                         {/* Close Button */}
                         <button
-                            onClick={() => setIsModalOpen(false)}
+                            onClick={handleCloseModal} // Updated to clean up preview
                             className="absolute top-4 right-4 text-white/70 hover:text-red-500 transition"
                         >
                             <X className="w-5 h-5" />
@@ -92,14 +117,26 @@ const Profile = () => {
                         <div className="flex items-center gap-4 mb-6">
                             <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white/30 shadow">
                                 <img
-                                    src="https://i.pravatar.cc/150?img=45"
+                                    src={previewImage || "https://i.pravatar.cc/150?img=45"} // Show preview if available
                                     alt="Profile"
                                     className="w-full h-full object-cover"
                                 />
                             </div>
-                            <button className="text-sm bg-gradient-to-r from-blue-600 to-green-500 text-white px-4 py-1.5 rounded-md hover:opacity-90 transition">
-                                Change Photo
-                            </button>
+                            <div>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="hidden" // Hide file input
+                                />
+                                <button
+                                    onClick={handleChangePhotoClick}
+                                    className="text-sm bg-gradient-to-r from-blue-600 to-green-500 text-white px-4 py-1.5 rounded-md hover:opacity-90 transition"
+                                >
+                                    Change Photo
+                                </button>
+                            </div>
                         </div>
 
                         {/* Form Fields */}
@@ -119,7 +156,7 @@ const Profile = () => {
                         {/* Action Buttons */}
                         <div className="mt-6 flex justify-end gap-3">
                             <button
-                                onClick={() => setIsModalOpen(false)}
+                                onClick={handleCloseModal} // Updated to clean up preview
                                 className="px-4 py-2 rounded-md border border-white/30 text-white text-sm hover:bg-white/10 transition"
                             >
                                 Cancel
