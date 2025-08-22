@@ -117,3 +117,9 @@ export interface AddReactionDTO {
     UserId?: string;
     ReactionType: string;
 }
+export interface Toast {
+    message: string;
+    type: "success" | "error" | "warning";
+    title?: string;
+    duration?: number; // in seconds
+}
