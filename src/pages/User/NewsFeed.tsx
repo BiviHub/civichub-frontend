@@ -1029,81 +1029,72 @@ export default function NewsFeed() {
             <AnimatePresence>
                 {toast && (
                     <motion.div
-                        key="toast-overlay"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
-                        aria-live="polite"
+                        key="toast"
+                        initial={{ opacity: 0, x: 50, y: -20 }}
+                        animate={{ opacity: 1, x: 0, y: 0 }}
+                        exit={{ opacity: 0, x: 50, y: -20 }}
+                        transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                        className="fixed top-6 right-6 z-50 w-[min(90vw,360px)] bg-white/10 backdrop-blur-md border border-white/20 text-white p-4 rounded-xl shadow-lg flex gap-3 items-start"
                         role="status"
+                        aria-live="polite"
                     >
-                        <motion.div
-                            key="toast"
-                            initial={{ y: -8, opacity: 0, scale: 0.98 }}
-                            animate={{ y: 0, opacity: 1, scale: 1 }}
-                            exit={{ y: -8, opacity: 0, scale: 0.98 }}
-                            transition={{ type: "spring", damping: 18, stiffness: 300 }}
-                            className={`pointer-events-auto w-[min(92vw,760px)] bg-white/6 backdrop-blur-md border border-white/8 text-white p-5 md:p-6 rounded-2xl shadow-2xl flex gap-4 items-start`}
+                        {/* Icon */}
+                        <div className="flex-none mt-0.5">
+                            {toast.type === "success" ? (
+                                <svg className="h-6 w-6 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            ) : toast.type === "error" ? (
+                                <svg className="h-6 w-6 text-red-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            ) : (
+                                <svg className="h-6 w-6 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8h.01M12 12h.01M12 16h.01" />
+                                    <circle cx="12" cy="12" r="9" />
+                                </svg>
+                            )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold">
+                                {toast.title ?? (toast.type === "success" ? "Success" : toast.type === "error" ? "Error" : "Notice")}
+                            </p>
+                            <p className="mt-0.5 text-sm text-white/90 truncate">{toast.message}</p>
+
+                            {/* Progress bar */}
+                            <div className="mt-2 h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                                <motion.div
+                                    initial={{ width: "100%" }}
+                                    animate={{ width: 0 }}
+                                    transition={{
+                                        duration: toast.duration ?? 10,
+                                        ease: "linear",
+                                    }}
+                                    onAnimationComplete={() => setToast(null)}
+                                    className={`h-full ${
+                                        toast.type === "success"
+                                            ? "bg-green-400"
+                                            : toast.type === "error"
+                                                ? "bg-red-400"
+                                                : "bg-yellow-400"
+                                    }`}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Close button */}
+                        <button
+                            onClick={() => setToast(null)}
+                            className="ml-2 text-sm px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 transition"
                         >
-                            {/* icon */}
-                            <div className="flex-none mt-0.5">
-                                {toast.type === "success" ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 md:h-8 md:w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                ) : toast.type === "error" ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 md:h-8 md:w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 md:h-8 md:w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01" />
-                                        <circle cx="12" cy="12" r="9" />
-                                    </svg>
-                                )}
-                            </div>
-
-                            {/* content */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between gap-4">
-                                    <div className="min-w-0">
-                                        <p className="text-sm md:text-base font-semibold">
-                                            {toast.title ?? (toast.type === "success" ? "Success" : toast.type === "error" ? "Error" : "Notice")}
-                                        </p>
-                                        <p className="mt-1 text-sm md:text-[15px] leading-snug text-white/90 truncate">
-                                            {toast.message}
-                                        </p>
-                                    </div>
-
-                                    <div className="flex-shrink-0 ml-2">
-                                        <button
-                                            onClick={() => setToast(null)}
-                                            aria-label="Dismiss notification"
-                                            className="px-3 py-1 rounded-md bg-white/10 hover:bg-white/16 text-sm font-medium transition"
-                                        >
-                                            OK
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* progress bar */}
-                                <div className="mt-3 h-1 w-full bg-white/10 rounded-full overflow-hidden">
-                                    <motion.div
-                                        initial={{ width: "100%" }}
-                                        animate={{ width: 0 }}
-                                        transition={{
-                                            duration: toast.duration ?? 10, // seconds (override by attaching a `duration` on toast)
-                                            ease: "linear",
-                                        }}
-                                        onAnimationComplete={() => setToast(null)}
-                                        className={`h-full ${toast.type === "success" ? "bg-green-400" : toast.type === "error" ? "bg-red-400" : "bg-yellow-400"}`}
-                                    />
-                                </div>
-                            </div>
-                        </motion.div>
+                            ✕
+                        </button>
                     </motion.div>
                 )}
             </AnimatePresence>
+
 
         </div>
     );
