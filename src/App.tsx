@@ -28,6 +28,7 @@ import AdminProfile from './pages/admin/Profile';
 import AboutPage from "./pages/AboutPage.tsx";
 import ContactPage from "./pages/ContactPage.tsx";
 import UserLayout from "./components/Layout/UserLayout.tsx";
+import ReportIssuePage from "./pages/User/ReportIssuePage";
 
 
 const queryClient = new QueryClient();
@@ -73,6 +74,8 @@ const App = () => (
                                 <Route path="settings" element={<Settings />} />
 
                                 <Route path="profile" element={<Profile />} />
+                                <Route path="report" element={<ReportIssuePage />} />{/* <-- new page */}
+
                             </Route>
 
 

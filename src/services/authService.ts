@@ -5,9 +5,13 @@ import type {
     UserDTO,
     AdminRegisterDTO,
     ForgotPasswordDTO,
-    FlaggedReportDTO,
     ResetPasswordDTO,
-    AdminDashboardDTO
+    AdminDashboardDTO,
+    CreateReportDTO,
+    ReportDTO,
+    AddCommentDTO,
+    AddReactionDTO,
+    FlagReportDTO,
 } from '../types/AuthTypes';
 
 export const login = async (loginData: LoginDTO) => {
@@ -58,18 +62,52 @@ export const getAllUsers = async (): Promise<UserDTO[]> => {
     const response = await api.get('/Account/AllUsers');
     return response.data;
 };
+
 export const getAdminDashboard = async (): Promise<AdminDashboardDTO> => {
     const response = await api.get('/Admin/AdminDashboard');
     return response.data;
 };
 
-
-export const getAllFlaggedReports = async (): Promise<FlaggedReportDTO[]> => {
+export const getAllFlaggedReports = async (): Promise<FlagReportDTO[]> => {
     const response = await api.get('/Report/AllFlaggedReport');
     return response.data;
 };
 
-export const getAllReports = async () => {
-    const response = await api.get('/Report/AllReport');
+export const getAllReports = async (): Promise<ReportDTO[]> => {
+    const res = await api.get("/Report/AllReport");
+    return res.data;
+};
+
+export const createReport = async (data: CreateReportDTO): Promise<number> => {
+    const formData = new FormData();
+    formData.append('Location', data.Location ?? '');
+    formData.append('Description', data.Description ?? '');
+    data.Photos?.forEach(photo => formData.append('Photos', photo));
+
+    const response = await api.post('/Report/createReport', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+};
+
+export const addComment = async (reportId: number, dto: AddCommentDTO) => {
+    const res = await api.post(`/Report/${reportId}/comments`, dto);
+    return res.data;
+};
+
+export const toggleReaction = async (reportId: number, dto: AddReactionDTO) => {
+    const res = await api.post(`/Report/${reportId}/reactions`, dto);
+    return res.data;
+};
+
+export const flagReport = async (dto: FlagReportDTO) => {
+    const res = await api.post("/Report/flagReport", dto);
+    return res.data;
+};
+
+export const reviewFlag = async (flagId: number, deleteReport: boolean, adminId: string): Promise<string> => {
+    const response = await api.post('/Report/ReviewFlag', null, {
+        params: { flagId, deleteReport, adminId }
+    });
     return response.data;
 };

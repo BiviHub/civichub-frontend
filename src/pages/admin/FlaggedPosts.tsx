@@ -2,18 +2,18 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 import { getAllFlaggedReports } from '../../services/authService';
-import type { FlaggedReportDTO } from '../../types/AuthTypes';
+import type { FlagReportDTO } from '../../types/AuthTypes';
 import AdminLayout from '../../components/Layout/AdminLayout';
 
 const FlaggedPosts = () => {
-    const [flaggedReports, setFlaggedReports] = useState<FlaggedReportDTO[]>([]);
+    const [flaggedReports, setFlagReports] = useState<FlagReportDTO[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchFlaggedReports = async () => {
+        const fetchFlagReports = async () => {
             try {
                 const result = await getAllFlaggedReports();
-                setFlaggedReports(result);
+                setFlagReports(result);
             } catch (error) {
                 console.error('Error fetching flagged reports:', error);
             } finally {
@@ -21,7 +21,7 @@ const FlaggedPosts = () => {
             }
         };
 
-        fetchFlaggedReports();
+        fetchFlagReports();
     }, []);
 
     return (
