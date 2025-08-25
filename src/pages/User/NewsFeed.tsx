@@ -34,9 +34,6 @@ import type {
 import { toAbsolute } from "../../utils/url";
 import type { Toast } from "../../types/AuthTypes";
 
-/* -------------------------------------------------------------------------- */
-/*  Small helpers & types                                                      */
-/* -------------------------------------------------------------------------- */
 
 function AvatarSmall({ name, photoUrl }: { name?: string; photoUrl?: string }) {
     const initial = name?.trim()?.[0]?.toUpperCase() ?? "?";
@@ -62,9 +59,6 @@ const isImageUrl = (url?: string) =>
 const isVideoUrl = (url?: string) =>
     !!url && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url.split("?")[0]);
 
-/* -------------------------------------------------------------------------- */
-/*  Lightbox modal                                                             */
-/* -------------------------------------------------------------------------- */
 
 function Lightbox({
                       open,
@@ -95,7 +89,6 @@ function Lightbox({
     }, [open, onClose, onPrev, onNext]);
 
     useEffect(() => {
-        // reset when opening different item
         setMediaError(false);
         setExists(null);
         if (!open) return;
@@ -130,8 +123,6 @@ function Lightbox({
     if (!open) return null;
     const item = items[index] ?? null;
     const url = item ? toAbsolute(item.photoUrl) : "";
-    const imagePlaceholder = "/images/placeholder.png";
-    const videoPlaceholder = "/images/video-placeholder.png";
 
     return (
         <AnimatePresence>
@@ -165,21 +156,15 @@ function Lightbox({
                                     src={url}
                                     alt="lightbox"
                                     className="max-w-[92vw] max-h-[80vh] object-contain"
-                                    onError={(e) => {
-                                        (e.currentTarget as HTMLImageElement).src = imagePlaceholder;
-                                    }}
                                 />
                             ) : isVideoUrl(url) ? (
                                 exists === false || mediaError ? (
-                                    <img
-                                        src={videoPlaceholder}
-                                        alt="video placeholder"
-                                        className="max-w-[92vw] max-h-[80vh] object-contain"
-                                    />
+                                    <div className="w-[600px] h-[400px] flex items-center justify-center text-gray-400">
+                                        <ImageIcon size={32} />
+                                    </div>
                                 ) : (
                                     <video
                                         src={url}
-                                        poster={videoPlaceholder}
                                         controls
                                         className="max-w-[92vw] max-h-[80vh] object-contain"
                                         onError={() => setMediaError(true)}
@@ -206,9 +191,7 @@ function Lightbox({
     );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Flag modal                                                                 */
-/* -------------------------------------------------------------------------- */
+
 
 function FlagModal({
                        open,
@@ -299,9 +282,7 @@ function FlagModal({
     );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Share modal                                                                */
-/* -------------------------------------------------------------------------- */
+
 
 function ShareModal({
                         open,
@@ -395,9 +376,6 @@ function ShareModal({
     );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Comment tree builder                                                       */
-/* -------------------------------------------------------------------------- */
 
 interface CommentTree extends ReportComment {
     replies: CommentTree[];
@@ -405,9 +383,8 @@ interface CommentTree extends ReportComment {
 
 function buildCommentTreeTwoPass(comments: ReportComment[]): CommentTree[] {
     const map = new Map<number, CommentTree>();
-    // only index comments that have a numeric id
     comments.forEach((c) => {
-        if (c.id == null) return; // guard: skip undefined/null ids
+        if (c.id == null) return;
         map.set(c.id, { ...c, replies: [] });
     });
 
@@ -425,9 +402,6 @@ function buildCommentTreeTwoPass(comments: ReportComment[]): CommentTree[] {
 }
 
 
-/* -------------------------------------------------------------------------- */
-/*  Post Media Carousel (open lightbox + video fallback + poster)             */
-/* -------------------------------------------------------------------------- */
 
 function PostMediaCarousel({
                                media,
@@ -479,20 +453,9 @@ function PostMediaCarousel({
         };
     }, [index, media]);
 
-    const imgPlaceholder = "/images/placeholder.png";
-    const videoPlaceholder = "/images/video-placeholder.png";
-
-    // if no media, show placeholder
+    // if no media, show nothing
     if (!media || media.length === 0) {
-        return (
-            <div className="w-full h-64 sm:h-72 md:h-96 flex items-center justify-center bg-gray-900/10 dark:bg-gray-800 rounded-lg overflow-hidden">
-                <img
-                    src={imgPlaceholder}
-                    alt="placeholder"
-                    className="max-w-full max-h-full object-contain"
-                />
-            </div>
-        );
+        return null;
     }
 
     const current = media[index];
@@ -512,22 +475,15 @@ function PostMediaCarousel({
                         loading="lazy"
                         className="w-full h-full object-cover cursor-zoom-in"
                         onClick={() => onOpenLightbox(media, index)}
-                        onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = imgPlaceholder;
-                        }}
                     />
                 ) : isVideoUrl(rawUrl) ? (
                     showPlaceholderForVideo ? (
-                        <img
-                            src={videoPlaceholder}
-                            alt="video placeholder"
-                            className="max-w-full max-h-full object-contain cursor-zoom-in"
-                            onClick={() => onOpenLightbox(media, index)}
-                        />
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <ImageIcon />
+                        </div>
                     ) : (
                         <video
                             src={photoUrl}
-                            poster={videoPlaceholder}
                             className="w-full h-full object-cover"
                             controls
                             preload="metadata"
@@ -575,9 +531,7 @@ function PostMediaCarousel({
     );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Post card                                                                  */
-/* -------------------------------------------------------------------------- */
+
 
 const reactions = [
     { type: "Like", emoji: "👍" },
@@ -845,9 +799,6 @@ function PostCard({
     );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Main NewsFeed                                                              */
-/* -------------------------------------------------------------------------- */
 
 export default function NewsFeed() {
     const [posts, setPosts] = useState<ReportDTO[]>([]);
@@ -869,7 +820,6 @@ export default function NewsFeed() {
 
     const [toast, setToast] = useState<Toast | null>(null);
 
-    // read once and pass down
     const currentUserId = localStorage.getItem("userId") ?? undefined;
 
     const fetchPosts = async () => {
@@ -1025,7 +975,6 @@ export default function NewsFeed() {
             <FlagModal open={flagModalOpen} onClose={() => setFlagModalOpen(false)} onSubmit={submitFlag} reportId={flagTargetId} showToast={showToast} />
             <ShareModal open={shareModalOpen} onClose={() => setShareModalOpen(false)} post={shareTargetPost} showToast={showToast} />
 
-            /* Paste inside your component where `toast` and `setToast` are available */
             <AnimatePresence>
                 {toast && (
                     <motion.div
