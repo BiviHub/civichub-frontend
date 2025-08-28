@@ -111,3 +111,11 @@ export const reviewFlag = async (flagId: number, deleteReport: boolean, adminId:
     });
     return response.data;
 };
+// services/authService.ts (or ../api file)
+export const getMyReports = async (): Promise<ReportDTO[]> => {
+    const res = await api.get('/Report/MyReports');
+    // Some server responses might return { Message: "You haven't made any post" } when empty.
+    // Normalize to an array here so callers don't need to handle two shapes.
+    if (!res || !res.data) return [];
+    return Array.isArray(res.data) ? (res.data as ReportDTO[]) : [];
+};

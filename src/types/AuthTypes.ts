@@ -91,6 +91,8 @@ export interface ReportDTO {
     photos: ReportPhoto[];
     comments: ReportComment[];
     reactions: ReportReaction[];
+    userProfilePicture?: string;
+
 }
 
 export interface AdminDashboardDTO {
