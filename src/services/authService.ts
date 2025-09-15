@@ -1,3 +1,4 @@
+// authService.ts
 import api from '../api';
 import type {
     LoginDTO,
@@ -12,6 +13,7 @@ import type {
     AddCommentDTO,
     AddReactionDTO,
     FlagReportDTO,
+    ProfileDTO,
 } from '../types/AuthTypes';
 
 export const login = async (loginData: LoginDTO) => {
@@ -111,6 +113,7 @@ export const reviewFlag = async (flagId: number, deleteReport: boolean, adminId:
     });
     return response.data;
 };
+
 // services/authService.ts (or ../api file)
 export const getMyReports = async (): Promise<ReportDTO[]> => {
     const res = await api.get('/Report/MyReports');
@@ -118,4 +121,10 @@ export const getMyReports = async (): Promise<ReportDTO[]> => {
     // Normalize to an array here so callers don't need to handle two shapes.
     if (!res || !res.data) return [];
     return Array.isArray(res.data) ? (res.data as ReportDTO[]) : [];
+};
+
+// New function for updating profile
+export const updateProfile = async (profileData: ProfileDTO): Promise<{ message: string }> => {
+    const response = await api.put('/Account/update-profile', profileData);
+    return response.data;
 };

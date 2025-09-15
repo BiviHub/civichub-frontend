@@ -1,7 +1,7 @@
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from './Context/ThemeProvider';
+import { ProfileProvider } from './Context/ProfileContext.tsx'; // Import the new ProfileProvider
 import "./index.css";
 
 import Home from "./pages/Home";
@@ -24,73 +24,63 @@ import Announcements from './pages/admin/Announcements';
 import Analytics from './pages/admin/Analytics';
 import AdminSettings from './pages/admin/Settings';
 import AdminProfile from './pages/admin/Profile';
-
 import AboutPage from "./pages/AboutPage.tsx";
 import ContactPage from "./pages/ContactPage.tsx";
 import UserLayout from "./components/Layout/UserLayout.tsx";
 import ReportIssuePage from "./pages/User/ReportIssuePage";
-
 
 const queryClient = new QueryClient();
 
 const App = () => (
     <QueryClientProvider client={queryClient}>
         <ThemeProvider> {/* Provides dark mode globally */}
-            <BrowserRouter>
-                <div className="min-h-screen bg-gray-50 flex flex-col">
+            <ProfileProvider> {/* Provides profile context globally */}
+                <BrowserRouter>
+                    <div className="min-h-screen bg-gray-50 flex flex-col">
+                        <main className="flex-1">
+                            <Routes>
+                                <Route path="/" element={<Home />} />
+                                <Route path="/login" element={<Login />} />
+                                <Route path="/register" element={<Register />} />
+                                <Route path={"/admin-register"} element={<AdminRegister />} /> {/* ✅ Admin Route */}
+                                <Route path="/two-factor-settings" element={<TwoFactorSettings />} />
+                                <Route path="/AboutPage" element={<AboutPage />} />
+                                <Route path="/ContactPage" element={<ContactPage />} />
+                                <Route path="/forgot-password" element={<ForgotPassword />} />
+                                <Route path="/reset-password" element={<ResetPassword />} />
 
-                    <main className="flex-1">
-                        <Routes>
-                            <Route path="/" element={<Home />} />
-                            <Route path="/login" element={<Login />} />
-                            <Route path="/register" element={<Register />} />
-                            <Route path={"/admin-register"} element={<AdminRegister />} /> {/* ✅ Admin Route */}
-                            <Route path="/two-factor-settings" element={<TwoFactorSettings />} />
-                            <Route path="/AboutPage" element={<AboutPage />} />
-                            <Route path="/ContactPage" element={<ContactPage />} />
-                            <Route path="/forgot-password" element={<ForgotPassword />} />
-                            <Route path="/reset-password" element={<ResetPassword />} />
+                                <Route path="/admin/users" element={<AllUsers />} />
+                                <Route path="/my-posts" element={<MyPosts />} />
+                                {/* Authenticated Routes (Simulated for now) */}
 
-                            <Route path="/admin/users" element={<AllUsers />} />
-                            <Route path="/my-posts" element={<MyPosts />} />
-                            {/* Authenticated Routes (Simulated for now) */}
+                                <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                                <Route path="/admin/reports" element={<ManageReports />} />
+                                <Route path="/admin/flagged" element={<FlaggedPosts />} />
+                                <Route path="/pages/about" element={<AboutPage />} />
+                                <Route path="/pages/contact" element={<ContactPage />} />
+                                <Route path="/admin/content" element={<ContentManagement />} />
+                                <Route path="/admin/announcements" element={<Announcements />} />
+                                <Route path="/admin/analytics" element={<Analytics />} />
+                                <Route path="/admin/settings" element={<AdminSettings />} />
+                                <Route path="/admin/profile" element={<AdminProfile />} />
+                                {/* User Routes Nested under UserLayout */}
+                                <Route path="/user" element={<UserLayout />}>
+                                    <Route path="news" element={<NewsFeed />} />
+                                    <Route path="posts" element={<MyPosts />} />
+                                    <Route path="settings" element={<Settings />} />
+                                    <Route path="profile" element={<Profile />} />
+                                    <Route path="report" element={<ReportIssuePage />} />{/* <-- new page */}
+                                </Route>
 
-
-
-                            <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                            <Route path="/admin/reports" element={<ManageReports />} />
-                            <Route path="/admin/flagged" element={<FlaggedPosts />} />
-                            <Route path="/pages/about" element={<AboutPage />} />
-                            <Route path="/pages/contact" element={<ContactPage />} />
-                            <Route path="/admin/content" element={<ContentManagement />} />
-                            <Route path="/admin/announcements" element={<Announcements />} />
-                            <Route path="/admin/analytics" element={<Analytics />} />
-                            <Route path="/admin/settings" element={<AdminSettings />} />
-                            <Route path="/admin/profile" element={<AdminProfile />} />
-                            {/* User Routes Nested under UserLayout */}
-                            <Route path="/user" element={<UserLayout />}>
-                                <Route path="news" element={<NewsFeed />} />
-                                <Route path="posts" element={<MyPosts />} />
-                                <Route path="settings" element={<Settings />} />
-
-                                <Route path="profile" element={<Profile />} />
-                                <Route path="report" element={<ReportIssuePage />} />{/* <-- new page */}
-
-                            </Route>
-
-
-                            {/* Fallback */}
-                            <Route path="*" element={<Navigate to="/" />} />
-                        </Routes>
-
-                    </main>
-
-
-                </div>
-            </BrowserRouter>
+                                {/* Fallback */}
+                                <Route path="*" element={<Navigate to="/" />} />
+                            </Routes>
+                        </main>
+                    </div>
+                </BrowserRouter>
+            </ProfileProvider>
         </ThemeProvider>
     </QueryClientProvider>
 );
 
 export default App;
-
