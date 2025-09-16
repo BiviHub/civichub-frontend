@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     User,
     Bell,
@@ -13,18 +13,19 @@ import {
     Camera,
 } from 'lucide-react';
 import { useTheme } from '../../Context/useTheme';
+import { useProfile } from '../../Context/ProfileContext';
 
 const Settings = () => {
     const [activeTab, setActiveTab] = useState('profile');
+    const { profile, setProfile } = useProfile();
+    const [editedProfile, setEditedProfile] = useState({ firstName: '', lastName: '', email: '', phoneNumber: '' });
+    const { isDarkMode, toggleDarkMode } = useTheme();
 
-    // Toggle states
+    // Toggle states (unchanged for other tabs)
     const [emailNotifications, setEmailNotifications] = useState(true);
     const [smsNotifications, setSmsNotifications] = useState(false);
     const [pushNotifications, setPushNotifications] = useState(false);
     const [twoFactorAuth, setTwoFactorAuth] = useState(false);
-    const { isDarkMode, toggleDarkMode } = useTheme();
-
-    // Notification-specific toggles
     const [followedUsers, setFollowedUsers] = useState(true);
     const [localPosts, setLocalPosts] = useState(false);
     const [generalActivity, setGeneralActivity] = useState(true);
@@ -54,14 +55,41 @@ const Settings = () => {
                     checked ? 'bg-green-500' : 'bg-white/30'
                 }`}
             >
-        <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                checked ? 'translate-x-6' : 'translate-x-1'
-            }`}
-        />
+                <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        checked ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                />
             </button>
         </div>
     );
+
+    // Sync editedProfile with profile from context
+    useEffect(() => {
+        if (profile) {
+            setEditedProfile({
+                firstName: profile.firstName || '',
+                lastName: profile.lastName || '',
+                email: profile.email || '',
+                phoneNumber: profile.phoneNumber || '',
+            });
+        }
+    }, [profile]);
+
+    // Handle save changes for profile tab
+    const handleSaveProfile = () => {
+        if (profile) {
+            const updatedProfile = {
+                ...profile,
+                firstName: editedProfile.firstName,
+                lastName: editedProfile.lastName,
+                email: editedProfile.email,
+                phoneNumber: editedProfile.phoneNumber,
+            };
+            setProfile(updatedProfile);
+            console.log("Profile saved:", updatedProfile);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-600 to-green-500 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8 text-white">
@@ -107,7 +135,15 @@ const Settings = () => {
                                 <div className="flex flex-col sm:flex-row items-center gap-6">
                                     <div className="relative">
                                         <div className="w-24 h-24 rounded-full bg-white/20 border-2 border-white/30 overflow-hidden flex items-center justify-center">
-                                            <User className="w-10 h-10 text-white/60 dark:text-white/50" />
+                                            <img
+                                                src={profile?.profilePictureUrl || "https://i.pravatar.cc/300?img=45"}
+                                                alt="Profile"
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    console.error("Image load error:", profile?.profilePictureUrl);
+                                                    (e.target as HTMLImageElement).src = "https://i.pravatar.cc/300?img=45";
+                                                }}
+                                            />
                                         </div>
                                         <button className="absolute -bottom-1 -right-1 w-8 h-8 bg-white text-blue-600 dark:text-blue-500 rounded-full flex items-center justify-center border-2 border-blue-600 hover:bg-white/90 transition-colors">
                                             <Camera className="w-4 h-4" />
@@ -125,7 +161,8 @@ const Settings = () => {
                                     <h3 className="text-sm font-semibold mb-2">First Name</h3>
                                     <input
                                         type="text"
-                                        defaultValue="John"
+                                        value={editedProfile.firstName}
+                                        onChange={(e) => setEditedProfile({ ...editedProfile, firstName: e.target.value })}
                                         className="w-full bg-white/10 dark:bg-white/5 border border-white/20 p-3 rounded-xl text-white placeholder-white/50"
                                     />
                                 </div>
@@ -133,30 +170,43 @@ const Settings = () => {
                                     <h3 className="text-sm font-semibold mb-2">Last Name</h3>
                                     <input
                                         type="text"
-                                        defaultValue="Doe"
+                                        value={editedProfile.lastName}
+                                        onChange={(e) => setEditedProfile({ ...editedProfile, lastName: e.target.value })}
                                         className="w-full bg-white/10 dark:bg-white/5 border border-white/20 p-3 rounded-xl text-white placeholder-white/50"
                                     />
                                 </div>
                             </div>
 
-                            {/* Email and Username Fields in One Row */}
+                            {/* Email and Phone Number Fields in One Row */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className={settingsBoxClass}>
                                     <h3 className="text-sm font-semibold mb-2">Email Address</h3>
                                     <input
                                         type="email"
-                                        defaultValue="john@example.com"
+                                        value={editedProfile.email}
+                                        onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
                                         className="w-full bg-white/10 dark:bg-white/5 border border-white/20 p-3 rounded-xl text-white placeholder-white/50"
                                     />
                                 </div>
                                 <div className={settingsBoxClass}>
-                                    <h3 className="text-sm font-semibold mb-2">Username</h3>
+                                    <h3 className="text-sm font-semibold mb-2">Phone Number</h3>
                                     <input
-                                        type="text"
-                                        defaultValue="johndoe"
+                                        type="tel"
+                                        value={editedProfile.phoneNumber}
+                                        onChange={(e) => setEditedProfile({ ...editedProfile, phoneNumber: e.target.value })}
                                         className="w-full bg-white/10 dark:bg-white/5 border border-white/20 p-3 rounded-xl text-white placeholder-white/50"
                                     />
                                 </div>
+                            </div>
+
+                            {/* Save Button */}
+                            <div className="text-right">
+                                <button
+                                    onClick={handleSaveProfile}
+                                    className="px-6 py-3 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition-colors"
+                                >
+                                    Save Changes
+                                </button>
                             </div>
                         </div>
                     )}
@@ -266,7 +316,6 @@ const Settings = () => {
                                 <p className="text-white/60 dark:text-white/50 text-sm mt-2">Enable app notifications</p>
                             </div>
 
-                            {/* Notification-specific toggles */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
                                 <div className="bg-white/10 dark:bg-white/5 rounded-xl p-4 flex items-center justify-between border border-white/20">
                                     <span className="text-white/80 text-sm">Get updates from people you follow</span>
@@ -338,7 +387,7 @@ const Settings = () => {
                     )}
                 </div>
 
-                {/* Footer Buttons */}
+                {/* Footer Buttons (unchanged) */}
                 <div className="flex flex-col sm:flex-row justify-center gap-4 mt-10">
                     <button className="px-4 py-2 text-white border border-white/30 rounded-xl bg-transparent hover:bg-white/10 transition">
                         Cancel

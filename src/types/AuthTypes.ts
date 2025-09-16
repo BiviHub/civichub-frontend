@@ -1,3 +1,4 @@
+// AuthTypes.ts (or whatever file contains the types)
 export interface LoginDTO {
     email: string;
     password: string;
@@ -56,7 +57,6 @@ export interface FlagReportDTO {
     isReviewed?: boolean;
 }
 
-
 export interface ReportPhoto {
     id: number;
     photoUrl: string;
@@ -92,7 +92,6 @@ export interface ReportDTO {
     comments: ReportComment[];
     reactions: ReportReaction[];
     userProfilePicture?: string;
-
 }
 
 export interface AdminDashboardDTO {
@@ -124,4 +123,10 @@ export interface Toast {
     type: "success" | "error" | "warning";
     title?: string;
     duration?: number; // in seconds
+}
+export interface ProfileDTO {
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    address: string;
 }
