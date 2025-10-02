@@ -1,4 +1,4 @@
-// AuthTypes.ts (or whatever file contains the types)
+// No changes needed; included for completeness as per your request
 export interface LoginDTO {
     email: string;
     password: string;
@@ -106,6 +106,7 @@ export interface CreateReportDTO {
     Location?: string;
     Description?: string;
     Photos?: File[];
+    CitizenId?: string;
 }
 
 export interface AddCommentDTO {
@@ -118,15 +119,55 @@ export interface AddReactionDTO {
     UserId?: string;
     ReactionType: string;
 }
+
 export interface Toast {
     message: string;
     type: "success" | "error" | "warning";
     title?: string;
     duration?: number; // in seconds
 }
+
 export interface ProfileDTO {
     firstName: string;
     lastName: string;
     phoneNumber: string;
     address: string;
+}
+
+export interface UserReportDTO {
+    UserId: string;
+    Location?: string;
+    Description?: string;
+    DateCreated: string;
+    CommentCount: number;
+    ReactionCount: number;
+}
+
+export interface EditReportDTO {
+    Location?: string;
+    Description?: string;
+}
+
+// Additions for Settings functionality
+export interface ChangePasswordDTO {
+    oldPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+}
+
+export interface NotificationPrefsDTO {
+    emailNotifications: boolean;
+    smsNotifications: boolean;
+    pushNotifications: boolean;
+    followedUsers: boolean;
+    localPosts: boolean;
+    generalActivity: boolean;
+}
+
+export interface PrivacySettingsDTO {
+    visibility: 'public' | 'private' | 'friends';
+}
+
+export interface Update2FADTO {
+    enabled: boolean;
 }

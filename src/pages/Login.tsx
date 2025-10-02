@@ -6,10 +6,10 @@ import { jwtDecode } from 'jwt-decode';
 import axios from 'axios';
 import { login } from '../services/authService';
 
-
 interface DecodedToken {
     role?: string;
-    [key: string]: string | undefined; // or `unknown` if you prefer
+    UserId?: string;
+    [key: string]: string | undefined;
 }
 
 const Login = () => {
@@ -20,12 +20,22 @@ const Login = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(''); // Clear previous errors
 
         try {
             const result = await login({ email, password });
+            console.log("Login response:", result);
             localStorage.setItem('token', result.token);
 
             const decoded = jwtDecode<DecodedToken>(result.token);
+            const userId = decoded.UserId;
+            if (userId) {
+                localStorage.setItem("userId", userId);
+                console.log("Storing userId:", userId);
+            } else {
+                console.error("UserId not found in token");
+            }
+
             const role =
                 decoded.role ||
                 decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
@@ -36,13 +46,34 @@ const Login = () => {
                 navigate('/User/news');
             }
         } catch (err: unknown) {
+            let errorMessage = 'An unexpected error occurred. Please try again.';
+
             if (axios.isAxiosError(err) && err.response) {
-                setError(err.response.data || 'Login failed.');
+                const { status, data } = err.response;
+
+                // Map backend error messages to user-friendly messages
+                if (status === 400) {
+                    if (data.error === 'Email and password are required') {
+                        errorMessage = 'Please enter both email and password.';
+                    } else if (data.error === 'An error occurred during login') {
+                        errorMessage = 'Invalid input. Please check your details.';
+                    } else {
+                        errorMessage = data.error || 'Login failed. Please check your details.';
+                    }
+                } else if (status === 401) {
+                    errorMessage = 'Invalid email or password.';
+                } else if (status === 500) {
+                    errorMessage = 'Server error. Please try again later.';
+                } else if (status === 0 || err.code === 'ERR_NETWORK') {
+                    errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+                } else {
+                    errorMessage = data.error || 'Login failed. Please try again.';
+                }
             } else if (err instanceof Error) {
-                setError(err.message);
-            } else {
-                setError('Login failed. Please try again.');
+                errorMessage = 'An error occurred. Please try again.';
             }
+
+            setError(errorMessage);
         }
     };
 
@@ -116,4 +147,3 @@ const Login = () => {
 };
 
 export default Login;
-

@@ -66,6 +66,7 @@ const Settings = () => {
 
     // Sync editedProfile with profile from context
     useEffect(() => {
+        console.log("Profile data in Settings:", profile); // Debug log
         if (profile) {
             setEditedProfile({
                 firstName: profile.firstName || '',
@@ -73,6 +74,8 @@ const Settings = () => {
                 email: profile.email || '',
                 phoneNumber: profile.phoneNumber || '',
             });
+        } else {
+            console.warn("Profile is null or undefined. Ensure it’s loaded from context.");
         }
     }, [profile]);
 
@@ -161,7 +164,7 @@ const Settings = () => {
                                     <h3 className="text-sm font-semibold mb-2">First Name</h3>
                                     <input
                                         type="text"
-                                        value={editedProfile.firstName}
+                                        value={editedProfile.firstName || 'Not available'}
                                         onChange={(e) => setEditedProfile({ ...editedProfile, firstName: e.target.value })}
                                         className="w-full bg-white/10 dark:bg-white/5 border border-white/20 p-3 rounded-xl text-white placeholder-white/50"
                                     />
@@ -170,7 +173,7 @@ const Settings = () => {
                                     <h3 className="text-sm font-semibold mb-2">Last Name</h3>
                                     <input
                                         type="text"
-                                        value={editedProfile.lastName}
+                                        value={editedProfile.lastName || 'Not available'}
                                         onChange={(e) => setEditedProfile({ ...editedProfile, lastName: e.target.value })}
                                         className="w-full bg-white/10 dark:bg-white/5 border border-white/20 p-3 rounded-xl text-white placeholder-white/50"
                                     />
@@ -183,7 +186,7 @@ const Settings = () => {
                                     <h3 className="text-sm font-semibold mb-2">Email Address</h3>
                                     <input
                                         type="email"
-                                        value={editedProfile.email}
+                                        value={editedProfile.email || 'Not available'}
                                         onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
                                         className="w-full bg-white/10 dark:bg-white/5 border border-white/20 p-3 rounded-xl text-white placeholder-white/50"
                                     />
@@ -192,7 +195,7 @@ const Settings = () => {
                                     <h3 className="text-sm font-semibold mb-2">Phone Number</h3>
                                     <input
                                         type="tel"
-                                        value={editedProfile.phoneNumber}
+                                        value={editedProfile.phoneNumber || 'Not available'}
                                         onChange={(e) => setEditedProfile({ ...editedProfile, phoneNumber: e.target.value })}
                                         className="w-full bg-white/10 dark:bg-white/5 border border-white/20 p-3 rounded-xl text-white placeholder-white/50"
                                     />

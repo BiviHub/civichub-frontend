@@ -14,14 +14,21 @@ import {
     Twitter,
     Link,
     Smartphone,
+    Edit,
+    Trash,
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 import {
     getAllReports,
     addComment,
     toggleReaction,
     flagReport,
+    editReport,
+    deleteReport,
+    getAllUsers,
 } from "../../services/authService";
 import type {
     ReportDTO,
@@ -30,17 +37,18 @@ import type {
     AddCommentDTO,
     AddReactionDTO,
     FlagReportDTO,
+    EditReportDTO,
 } from "../../types/AuthTypes";
 import { toAbsolute } from "../../utils/url";
-import type { Toast } from "../../types/AuthTypes";
 
+const MySwal = withReactContent(Swal);
 
 function AvatarSmall({ name, photoUrl }: { name?: string; photoUrl?: string }) {
     const initial = name?.trim()?.[0]?.toUpperCase() ?? "?";
     if (photoUrl) {
         return (
             <img
-                src={photoUrl}
+                src={toAbsolute(photoUrl)}
                 alt={name}
                 className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-800/40"
             />
@@ -58,7 +66,6 @@ const isImageUrl = (url?: string) =>
 
 const isVideoUrl = (url?: string) =>
     !!url && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url.split("?")[0]);
-
 
 function Lightbox({
                       open,
@@ -103,7 +110,6 @@ function Lightbox({
 
         (async function probe() {
             try {
-                // HEAD first (some servers disallow HEAD -> fall back to tiny GET)
                 let r = await fetch(url, { method: "HEAD" });
                 if (!r.ok) {
                     r = await fetch(url, { method: "GET", headers: { Range: "bytes=0-0" } });
@@ -191,8 +197,6 @@ function Lightbox({
     );
 }
 
-
-
 function FlagModal({
                        open,
                        onClose,
@@ -204,7 +208,7 @@ function FlagModal({
     onClose: () => void;
     onSubmit: (reason: string) => Promise<void>;
     reportId: number | null;
-    showToast: (msg: string, type: 'success' | 'error' | 'warning') => void;
+    showToast: (msg: string, type: "success" | "error" | "warning") => void;
 }) {
     const [reason, setReason] = useState("");
     const [loading, setLoading] = useState(false);
@@ -254,7 +258,7 @@ function FlagModal({
                             <button
                                 onClick={async () => {
                                     if (!reason.trim()) {
-                                        showToast("Please provide a reason.", 'warning');
+                                        showToast("Please provide a reason.", "warning");
                                         return;
                                     }
                                     setLoading(true);
@@ -262,11 +266,11 @@ function FlagModal({
                                         await onSubmit(reason.trim());
                                         setLoading(false);
                                         onClose();
-                                        showToast("Flag submitted. Thank you.", 'success');
+                                        showToast("Flag submitted. Thank you.", "success");
                                     } catch (err) {
                                         setLoading(false);
                                         console.error(err);
-                                        showToast("Failed to submit flag.", 'error');
+                                        showToast("Failed to submit flag.", "error");
                                     }
                                 }}
                                 className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
@@ -282,8 +286,6 @@ function FlagModal({
     );
 }
 
-
-
 function ShareModal({
                         open,
                         onClose,
@@ -293,28 +295,28 @@ function ShareModal({
     open: boolean;
     onClose: () => void;
     post: ReportDTO | null;
-    showToast: (msg: string, type: 'success' | 'error' | 'warning') => void;
+    showToast: (msg: string, type: "success" | "error" | "warning") => void;
 }) {
     if (!open || !post) return null;
 
-    const shareText = encodeURIComponent(`${post.description || 'Check this out'} at ${post.location || ''}`);
-    const shareUrl = encodeURIComponent(window.location.href); // Placeholder, in production use actual post URL
+    const shareText = encodeURIComponent(`${post.description || "Check this out"} at ${post.location || ""}`);
+    const shareUrl = encodeURIComponent(`${window.location.origin}/post/${post.id}`);
 
     const shareToFacebook = () => {
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}`, '_blank');
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}`, "_blank");
     };
 
     const shareToTwitter = () => {
-        window.open(`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`, '_blank');
+        window.open(`https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`, "_blank");
     };
 
     const shareToWhatsApp = () => {
-        window.open(`https://wa.me/?text=${shareText}%20${shareUrl}`, '_blank');
+        window.open(`https://wa.me/?text=${shareText}%20${shareUrl}`, "_blank");
     };
 
     const copyLink = () => {
-        navigator.clipboard.writeText(`${window.location.href}?post=${post.id}`);
-        showToast('Link copied to clipboard!', 'success');
+        navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+        showToast("Link copied to clipboard!", "success");
     };
 
     return (
@@ -376,6 +378,203 @@ function ShareModal({
     );
 }
 
+function EditReportModal({
+                             open,
+                             onClose,
+                             post,
+                             onSubmit,
+                         }: {
+    open: boolean;
+    onClose: () => void;
+    post: ReportDTO | null;
+    onSubmit: (reportId: number, location: string, description: string) => Promise<void>;
+}) {
+    const [location, setLocation] = useState("");
+    const [description, setDescription] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (open && post) {
+            setLocation(post.location || "");
+            setDescription(post.description || "");
+        } else {
+            setLocation("");
+            setDescription("");
+        }
+    }, [open, post]);
+
+    if (!open || !post) return null;
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+            >
+                <motion.div
+                    className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700"
+                    initial={{ y: 20, scale: 0.95 }}
+                    animate={{ y: 0, scale: 1 }}
+                    exit={{ y: 20, scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Edit Your Report</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">Update the details of your community report.</p>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Location</label>
+                            <input
+                                value={location}
+                                onChange={(e) => setLocation(e.target.value)}
+                                placeholder="Enter location"
+                                className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 transition"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Description</label>
+                            <textarea
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                rows={5}
+                                placeholder="Enter description"
+                                className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 transition"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-6">
+                        <div className="text-xs text-gray-500">Report ID: {post.id}</div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={onClose}
+                                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-700 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (!location.trim() && !description.trim()) {
+                                        MySwal.fire({
+                                            title: "Missing Information",
+                                            text: "Please provide at least a location or description.",
+                                            icon: "warning",
+                                            confirmButtonColor: "#2563eb",
+                                            background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                                            color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+                                        });
+                                        return;
+                                    }
+                                    setLoading(true);
+                                    try {
+                                        await onSubmit(post.id, location.trim(), description.trim());
+                                        setLoading(false);
+                                        onClose();
+                                        MySwal.fire({
+                                            title: "Success",
+                                            text: "Report updated successfully!",
+                                            icon: "success",
+                                            confirmButtonColor: "#2563eb",
+                                            background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                                            color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+                                        });
+                                    } catch (err: any) {
+                                        setLoading(false);
+                                        const message = err.message || "Failed to update report.";
+                                        console.error("Edit failed:", err);
+                                        MySwal.fire({
+                                            title: "Error",
+                                            text: message,
+                                            icon: "error",
+                                            confirmButtonColor: "#2563eb",
+                                            background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                                            color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+                                        });
+                                    }
+                                }}
+                                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+                                disabled={loading}
+                            >
+                                {loading ? "Saving..." : "Save Changes"}
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
+    );
+}
+
+function DeleteConfirmationModal({
+                                     open,
+                                     onClose,
+                                     onConfirm,
+                                     reportId,
+                                 }: {
+    open: boolean;
+    onClose: () => void;
+    onConfirm: (reportId: number) => Promise<void>;
+    reportId: number | null;
+}) {
+    const [loading, setLoading] = useState(false);
+
+    if (!open || !reportId) return null;
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+            >
+                <motion.div
+                    className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700"
+                    initial={{ y: 20, scale: 0.95 }}
+                    animate={{ y: 0, scale: 1 }}
+                    exit={{ y: 20, scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Delete Report</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+                        Are you sure you want to delete this report? This action cannot be undone.
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                        <div className="text-xs text-gray-500">Report ID: {reportId}</div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={onClose}
+                                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-700 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    setLoading(true);
+                                    try {
+                                        await onConfirm(reportId);
+                                        setLoading(false);
+                                        onClose();
+                                    } catch (err) {
+                                        setLoading(false);
+                                        console.error(err);
+                                    }
+                                }}
+                                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition"
+                                disabled={loading}
+                            >
+                                {loading ? "Deleting..." : "Delete"}
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
+    );
+}
 
 interface CommentTree extends ReportComment {
     replies: CommentTree[];
@@ -393,15 +592,13 @@ function buildCommentTreeTwoPass(comments: ReportComment[]): CommentTree[] {
         if (c.parentCommentId != null) {
             const parent = map.get(c.parentCommentId);
             if (parent) parent.replies.push(c);
-            else roots.push(c); // orphan
+            else roots.push(c);
         } else {
             roots.push(c);
         }
     }
     return roots;
 }
-
-
 
 function PostMediaCarousel({
                                media,
@@ -410,12 +607,10 @@ function PostMediaCarousel({
     media: ReportPhoto[];
     onOpenLightbox: (items: ReportPhoto[], index: number) => void;
 }) {
-    // hooks always declared first
     const [index, setIndex] = useState(0);
     const [resourceOkMap, setResourceOkMap] = useState<Record<number, boolean>>({});
     const probedRef = useRef<Record<number, boolean>>({});
 
-    // probe effect: always called but returns early if no media
     useEffect(() => {
         if (!media || media.length === 0) return;
         let cancelled = false;
@@ -425,14 +620,11 @@ function PostMediaCarousel({
 
         const url = toAbsolute(item.photoUrl);
 
-        // skip if already probed
         if (probedRef.current[idx]) return;
 
         probedRef.current[idx] = true;
-
         (async function probe() {
             try {
-                // HEAD first
                 let r = await fetch(url, { method: "HEAD" });
                 if (!r.ok) {
                     r = await fetch(url, { method: "GET", headers: { Range: "bytes=0-0" } });
@@ -453,7 +645,6 @@ function PostMediaCarousel({
         };
     }, [index, media]);
 
-    // if no media, show nothing
     if (!media || media.length === 0) {
         return null;
     }
@@ -531,8 +722,6 @@ function PostMediaCarousel({
     );
 }
 
-
-
 const reactions = [
     { type: "Like", emoji: "👍" },
     { type: "Love", emoji: "❤️" },
@@ -548,8 +737,10 @@ function PostCard({
                       onReact,
                       onComment,
                       onOpenFlag,
-                      onOpenLightbox,
                       onOpenShare,
+                      onOpenLightbox,
+                      onEdit,
+                      onDelete,
                       activeComment,
                       setActiveComment,
                       commentInput,
@@ -557,6 +748,7 @@ function PostCard({
                       replyingTo,
                       setReplyingTo,
                       userId,
+                      userIdToNameMap,
                   }: {
     post: ReportDTO;
     onReact: (id: number, type: string) => void;
@@ -564,6 +756,8 @@ function PostCard({
     onOpenFlag: (reportId: number | null) => void;
     onOpenShare: (post: ReportDTO) => void;
     onOpenLightbox: (items: ReportPhoto[], idx: number) => void;
+    onEdit: (post: ReportDTO) => void;
+    onDelete: (reportId: number) => void;
     activeComment: number | null;
     setActiveComment: (id: number | null) => void;
     commentInput: string;
@@ -571,12 +765,14 @@ function PostCard({
     replyingTo: number | null;
     setReplyingTo: (id: number | null) => void;
     userId?: string | undefined;
+    userIdToNameMap: Map<string, string>;
 }) {
     const currentUserId = userId ?? "";
     const userReactionType = post.reactions.find((r) => r.userId === currentUserId)?.reactionType;
     const userHasReacted = !!userReactionType;
     const commentsTree = buildCommentTreeTwoPass(post.comments);
     const [showReactionPicker, setShowReactionPicker] = useState(false);
+    const isOwnPost = post.citizenId === currentUserId;
 
     const reactionCounts = post.reactions.reduce((acc, r) => {
         acc[r.reactionType] = (acc[r.reactionType] || 0) + 1;
@@ -585,6 +781,14 @@ function PostCard({
 
     const handleMouseEnter = () => setShowReactionPicker(true);
     const handleMouseLeave = () => setShowReactionPicker(false);
+
+    const getDisplayName = (comment: ReportComment) => {
+        if (comment.userName?.trim()) {
+            return comment.userName.trim();
+        }
+        const nameFromMap = comment.userId ? userIdToNameMap.get(comment.userId) : undefined;
+        return nameFromMap?.trim() || `User-${comment.userId?.slice(0, 6) || 'unknown'}`;
+    };
 
     return (
         <motion.article
@@ -615,6 +819,24 @@ function PostCard({
                         >
                             <Flag className="text-gray-600 dark:text-gray-200" />
                         </button>
+                        {isOwnPost && (
+                            <>
+                                <button
+                                    onClick={() => onEdit(post)}
+                                    className="p-2 rounded-md hover:bg-gray-100/50 dark:hover:bg-white/5"
+                                    title="Edit report"
+                                >
+                                    <Edit className="text-gray-600 dark:text-gray-200" />
+                                </button>
+                                <button
+                                    onClick={() => onDelete(post.id)}
+                                    className="p-2 rounded-md hover:bg-gray-100/50 dark:hover:bg-white/5"
+                                    title="Delete report"
+                                >
+                                    <Trash className="text-gray-600 dark:text-gray-200" />
+                                </button>
+                            </>
+                        )}
                         <button className="p-2 rounded-md hover:bg-gray-100/50 dark:hover:bg-white/5">
                             <MoreHorizontal className="text-gray-600 dark:text-gray-200" />
                         </button>
@@ -660,9 +882,9 @@ function PostCard({
                             className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg ${userHasReacted ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-300"} hover:bg-gray-100/50 dark:hover:bg-white/5`}
                         >
                             <span className="text-xl">
-                                {userReactionType ? reactions.find(r => r.type === userReactionType)?.emoji : '👍'}
+                                {userReactionType ? reactions.find((r) => r.type === userReactionType)?.emoji : "👍"}
                             </span>
-                            <span className="text-sm">{userReactionType || 'Like'}</span>
+                            <span className="text-sm">{userReactionType || "Like"}</span>
                         </button>
                         <AnimatePresence>
                             {showReactionPicker && (
@@ -706,7 +928,6 @@ function PostCard({
                     </button>
                 </div>
 
-                {/* Comments */}
                 <div className="mt-4">
                     <AnimatePresence>
                         {activeComment === post.id && (
@@ -714,12 +935,12 @@ function PostCard({
                                 <div className="max-h-60 overflow-y-auto space-y-3">
                                     {commentsTree.map((c) => (
                                         <div key={c.id} className="flex items-start gap-3">
-                                            <AvatarSmall name={c.userName} photoUrl={undefined} />
+                                            <AvatarSmall name={getDisplayName(c)} photoUrl={undefined} />
                                             <div className="flex-1">
                                                 <div className="bg-white dark:bg-gray-900/60 rounded-md p-3 border border-gray-200 dark:border-gray-700">
                                                     <div className="flex items-center justify-between gap-2">
                                                         <div>
-                                                            <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">{c.userName || "Anonymous"}</div>
+                                                            <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">{getDisplayName(c)}</div>
                                                             <div className="text-xs text-gray-500">{new Date(c.dateCreated).toLocaleString()}</div>
                                                         </div>
                                                     </div>
@@ -729,28 +950,26 @@ function PostCard({
                                                 <div className="mt-1">
                                                     <button
                                                         onClick={() => {
-                                                            setActiveComment(post.id ?? null);      // ensure number | null
-                                                            setReplyingTo(c.id ?? null);           // ensure number | null
-                                                            setCommentInput(`@${c.userName ?? "user"} `);
+                                                            setActiveComment(post.id ?? null);
+                                                            setReplyingTo(c.id ?? null);
+                                                            setCommentInput(`@${getDisplayName(c)} `);
                                                         }}
                                                         className="text-xs text-blue-500 mt-1"
                                                     >
                                                         Reply
                                                     </button>
-
                                                 </div>
 
-                                                {/* replies */}
                                                 {c.replies.length > 0 && (
                                                     <div className="mt-3 ml-8 space-y-3">
                                                         {c.replies.map((r) => (
                                                             <div key={r.id} className="flex items-start gap-3">
-                                                                <AvatarSmall name={r.userName} photoUrl={undefined} />
+                                                                <AvatarSmall name={getDisplayName(r)} photoUrl={undefined} />
                                                                 <div className="flex-1">
                                                                     <div className="bg-white dark:bg-gray-900/60 rounded-md p-3 border border-gray-200 dark:border-gray-700">
                                                                         <div className="flex items-center justify-between">
                                                                             <div>
-                                                                                <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">{r.userName || "Anonymous"}</div>
+                                                                                <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">{getDisplayName(r)}</div>
                                                                                 <div className="text-xs text-gray-500">{new Date(r.dateCreated).toLocaleString()}</div>
                                                                             </div>
                                                                         </div>
@@ -766,7 +985,6 @@ function PostCard({
                                     ))}
                                 </div>
 
-                                {/* composer */}
                                 <div className="mt-4 flex items-center gap-2">
                                     <input
                                         value={commentInput}
@@ -788,7 +1006,6 @@ function PostCard({
                                     >
                                         <Send />
                                     </button>
-
                                 </div>
                             </motion.div>
                         )}
@@ -799,28 +1016,55 @@ function PostCard({
     );
 }
 
-
 export default function NewsFeed() {
     const [posts, setPosts] = useState<ReportDTO[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeCommentPost, setActiveCommentPost] = useState<number | null>(null);
     const [replyingTo, setReplyingTo] = useState<number | null>(null);
     const [commentInput, setCommentInput] = useState("");
-
     const [search, setSearch] = useState("");
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxItems, setLightboxItems] = useState<ReportPhoto[]>([]);
     const [lightboxIndex, setLightboxIndex] = useState(0);
-
     const [flagModalOpen, setFlagModalOpen] = useState(false);
     const [flagTargetId, setFlagTargetId] = useState<number | null>(null);
-
     const [shareModalOpen, setShareModalOpen] = useState(false);
     const [shareTargetPost, setShareTargetPost] = useState<ReportDTO | null>(null);
-
-    const [toast, setToast] = useState<Toast | null>(null);
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [editTargetPost, setEditTargetPost] = useState<ReportDTO | null>(null);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+    const [userIdToNameMap, setUserIdToNameMap] = useState<Map<string, string>>(new Map());
 
     const currentUserId = localStorage.getItem("userId") ?? undefined;
+
+    // Fetch all users to map userId to names
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const users = await getAllUsers();
+                const nameMap = new Map<string, string>();
+                users.forEach((user) => {
+                    if (user.id) {
+                        const fullName = `${user.firstName} ${user.lastName}`.trim();
+                        nameMap.set(user.id, fullName);
+                    }
+                });
+                setUserIdToNameMap(nameMap);
+            } catch (err) {
+                console.error("Failed to fetch users:", err);
+                MySwal.fire({
+                    title: "Error",
+                    text: "Failed to load user names.",
+                    icon: "error",
+                    confirmButtonColor: "#2563eb",
+                    background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                    color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+                });
+            }
+        };
+        fetchUsers();
+    }, []);
 
     const fetchPosts = async () => {
         try {
@@ -829,6 +1073,14 @@ export default function NewsFeed() {
             setPosts(res);
         } catch (err) {
             console.error(err);
+            MySwal.fire({
+                title: "Error",
+                text: "Failed to load posts.",
+                icon: "error",
+                confirmButtonColor: "#2563eb",
+                background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+            });
         } finally {
             setIsLoading(false);
         }
@@ -838,30 +1090,42 @@ export default function NewsFeed() {
         fetchPosts();
     }, []);
 
-    const showToast = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
-        setToast({ message, type });
-    };
-
     const handleReact = async (id: number, type: string) => {
         try {
-            const dto: AddReactionDTO = { ReactionType: type };
+            const dto: AddReactionDTO = { ReactionType: type, UserId: currentUserId };
             await toggleReaction(id, dto);
             fetchPosts();
-        } catch (err) {
+        } catch (err: any) {
             console.error("React failed:", err);
+            MySwal.fire({
+                title: "Error",
+                text: err.message === "Please log in to react." ? "Please log in to react." : "Failed to add reaction.",
+                icon: "error",
+                confirmButtonColor: "#2563eb",
+                background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+            });
         }
     };
 
     const handleComment = async (id: number, parentId: number | null = null) => {
         if (!commentInput.trim()) return;
         try {
-            const dto: AddCommentDTO = { Content: commentInput.trim(), ParentCommentId: parentId };
+            const dto: AddCommentDTO = { Content: commentInput.trim(), ParentCommentId: parentId, UserId: currentUserId };
             await addComment(id, dto);
             setCommentInput("");
             setReplyingTo(null);
             fetchPosts();
-        } catch (err) {
+        } catch (err: any) {
             console.error("Comment failed:", err);
+            MySwal.fire({
+                title: "Error",
+                text: err.message === "Please log in to add a comment." ? "Please log in to comment." : "Failed to add comment.",
+                icon: "error",
+                confirmButtonColor: "#2563eb",
+                background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+            });
         }
     };
 
@@ -871,10 +1135,40 @@ export default function NewsFeed() {
     };
 
     const submitFlag = async (reason: string) => {
-        if (!flagTargetId) throw new Error("No target.");
-        const dto: FlagReportDTO = { reportId: flagTargetId, reason };
-        await flagReport(dto);
-        await fetchPosts();
+        if (!flagTargetId || !currentUserId) {
+            MySwal.fire({
+                title: "Error",
+                text: "No target or user ID.",
+                icon: "error",
+                confirmButtonColor: "#2563eb",
+                background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+            });
+            return;
+        }
+        try {
+            const dto: FlagReportDTO = { reportId: flagTargetId, reason, flaggedByUserId: currentUserId };
+            await flagReport(dto);
+            await fetchPosts();
+            MySwal.fire({
+                title: "Success",
+                text: "Flag submitted. Thank you.",
+                icon: "success",
+                confirmButtonColor: "#2563eb",
+                background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+            });
+        } catch (err: any) {
+            console.error("Flag failed:", err);
+            MySwal.fire({
+                title: "Error",
+                text: err.message || "Failed to flag report.",
+                icon: "error",
+                confirmButtonColor: "#2563eb",
+                background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+            });
+        }
     };
 
     const openShareModal = (post: ReportDTO) => {
@@ -882,7 +1176,113 @@ export default function NewsFeed() {
         setShareModalOpen(true);
     };
 
-    /* Lightbox handlers */
+    const openEditModal = (post: ReportDTO) => {
+        setEditTargetPost(post);
+        setEditModalOpen(true);
+    };
+
+    const submitEdit = async (reportId: number, location: string, description: string) => {
+        try {
+            const dto: EditReportDTO = {
+                Location: location.trim() || undefined,
+                Description: description.trim() || undefined,
+            };
+            const response = await editReport(reportId, dto);
+            await fetchPosts();
+            MySwal.fire({
+                title: "Success",
+                text: response.message || "Report updated successfully.",
+                icon: "success",
+                confirmButtonColor: "#2563eb",
+                background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+            });
+        } catch (err: any) {
+            const message = err.message || "Failed to update report.";
+            console.error("Edit failed:", err);
+            if (message.includes("Unauthorized") || message.includes("log in")) {
+                MySwal.fire({
+                    title: "Error",
+                    text: "Please log in to edit this report.",
+                    icon: "error",
+                    confirmButtonColor: "#2563eb",
+                    background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                    color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+                });
+            } else if (message.includes("You can only edit your own reports")) {
+                MySwal.fire({
+                    title: "Error",
+                    text: "You can only edit your own reports.",
+                    icon: "error",
+                    confirmButtonColor: "#2563eb",
+                    background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                    color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+                });
+            } else {
+                MySwal.fire({
+                    title: "Error",
+                    text: message,
+                    icon: "error",
+                    confirmButtonColor: "#2563eb",
+                    background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                    color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+                });
+            }
+            throw new Error(message);
+        }
+    };
+
+    const openDeleteModal = (reportId: number) => {
+        setDeleteTargetId(reportId);
+        setDeleteModalOpen(true);
+    };
+
+    const handleDelete = async (reportId: number) => {
+        try {
+            const response = await deleteReport(reportId);
+            MySwal.fire({
+                title: "Success",
+                text: response.message || "Report deleted successfully.",
+                icon: "success",
+                confirmButtonColor: "#2563eb",
+                background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+            });
+            await fetchPosts();
+        } catch (err: any) {
+            const message = err.message || "Failed to delete report.";
+            console.error("Delete failed:", err);
+            if (message.includes("Unauthorized") || message.includes("log in")) {
+                MySwal.fire({
+                    title: "Error",
+                    text: "Please log in to delete this report.",
+                    icon: "error",
+                    confirmButtonColor: "#2563eb",
+                    background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                    color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+                });
+            } else if (message.includes("You can only delete your own reports")) {
+                MySwal.fire({
+                    title: "Error",
+                    text: "You can only delete your own reports.",
+                    icon: "error",
+                    confirmButtonColor: "#2563eb",
+                    background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                    color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+                });
+            } else {
+                MySwal.fire({
+                    title: "Error",
+                    text: message,
+                    icon: "error",
+                    confirmButtonColor: "#2563eb",
+                    background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                    color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+                });
+            }
+        }
+    };
+
     const openLightbox = (items: ReportPhoto[], idx: number) => {
         setLightboxItems(items);
         setLightboxIndex(idx);
@@ -892,7 +1292,6 @@ export default function NewsFeed() {
     const prevLightbox = () => setLightboxIndex((i) => (i - 1 + lightboxItems.length) % lightboxItems.length);
     const nextLightbox = () => setLightboxIndex((i) => (i + 1) % lightboxItems.length);
 
-    /* Search filter */
     const filtered = posts.filter((p) => {
         if (!search.trim()) return true;
         const q = search.toLowerCase();
@@ -905,7 +1304,6 @@ export default function NewsFeed() {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800">
-            {/* sticky header with search */}
             <div className="sticky top-0 z-40 backdrop-blur-md bg-white/60 dark:bg-gray-900/60 border-b border-gray-200 dark:border-gray-800">
                 <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-4">
                     <div className="flex items-center gap-3">
@@ -924,23 +1322,17 @@ export default function NewsFeed() {
                             />
                         </div>
                     </div>
-
-                    <div className="hidden md:flex items-center gap-3">
-                        <button className="px-3 py-2 rounded-md bg-blue-600 text-white">New Post</button>
-                        <button className="px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-800">My Posts</button>
-                    </div>
                 </div>
             </div>
 
             <div className="max-w-3xl mx-auto px-4 py-8">
                 <header className="text-center mb-6">
-                    <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">
+                    <h3 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">
                         Community Feed
-                    </h1>
+                    </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">See what's happening in your community — {new Date().toLocaleString()}</p>
                 </header>
 
-                {/* feed */}
                 <div className="flex flex-col gap-6">
                     {isLoading ? (
                         <div className="w-full flex items-center justify-center py-20">
@@ -954,11 +1346,14 @@ export default function NewsFeed() {
                                 key={p.id}
                                 post={p}
                                 userId={currentUserId}
+                                userIdToNameMap={userIdToNameMap}
                                 onReact={handleReact}
                                 onComment={handleComment}
                                 onOpenFlag={openFlagModal}
                                 onOpenShare={openShareModal}
                                 onOpenLightbox={openLightbox}
+                                onEdit={openEditModal}
+                                onDelete={openDeleteModal}
                                 activeComment={activeCommentPost}
                                 setActiveComment={setActiveCommentPost}
                                 commentInput={commentInput}
@@ -972,79 +1367,38 @@ export default function NewsFeed() {
             </div>
 
             <Lightbox open={lightboxOpen} items={lightboxItems} index={lightboxIndex} onClose={closeLightbox} onPrev={prevLightbox} onNext={nextLightbox} />
-            <FlagModal open={flagModalOpen} onClose={() => setFlagModalOpen(false)} onSubmit={submitFlag} reportId={flagTargetId} showToast={showToast} />
-            <ShareModal open={shareModalOpen} onClose={() => setShareModalOpen(false)} post={shareTargetPost} showToast={showToast} />
-
-            <AnimatePresence>
-                {toast && (
-                    <motion.div
-                        key="toast"
-                        initial={{ opacity: 0, x: 50, y: -20 }}
-                        animate={{ opacity: 1, x: 0, y: 0 }}
-                        exit={{ opacity: 0, x: 50, y: -20 }}
-                        transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                        className="fixed top-6 right-6 z-50 w-[min(90vw,360px)] bg-white/10 backdrop-blur-md border border-white/20 text-white p-4 rounded-xl shadow-lg flex gap-3 items-start"
-                        role="status"
-                        aria-live="polite"
-                    >
-                        {/* Icon */}
-                        <div className="flex-none mt-0.5">
-                            {toast.type === "success" ? (
-                                <svg className="h-6 w-6 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                            ) : toast.type === "error" ? (
-                                <svg className="h-6 w-6 text-red-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            ) : (
-                                <svg className="h-6 w-6 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8h.01M12 12h.01M12 16h.01" />
-                                    <circle cx="12" cy="12" r="9" />
-                                </svg>
-                            )}
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold">
-                                {toast.title ?? (toast.type === "success" ? "Success" : toast.type === "error" ? "Error" : "Notice")}
-                            </p>
-                            <p className="mt-0.5 text-sm text-white/90 truncate">{toast.message}</p>
-
-                            {/* Progress bar */}
-                            <div className="mt-2 h-1 w-full bg-white/10 rounded-full overflow-hidden">
-                                <motion.div
-                                    initial={{ width: "100%" }}
-                                    animate={{ width: 0 }}
-                                    transition={{
-                                        duration: toast.duration ?? 10,
-                                        ease: "linear",
-                                    }}
-                                    onAnimationComplete={() => setToast(null)}
-                                    className={`h-full ${
-                                        toast.type === "success"
-                                            ? "bg-green-400"
-                                            : toast.type === "error"
-                                                ? "bg-red-400"
-                                                : "bg-yellow-400"
-                                    }`}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Close button */}
-                        <button
-                            onClick={() => setToast(null)}
-                            className="ml-2 text-sm px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 transition"
-                        >
-                            ✕
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-
+            <FlagModal open={flagModalOpen} onClose={() => setFlagModalOpen(false)} onSubmit={submitFlag} reportId={flagTargetId} showToast={(msg, type) => {
+                MySwal.fire({
+                    title: type === "success" ? "Success" : type === "error" ? "Error" : "Warning",
+                    text: msg,
+                    icon: type,
+                    confirmButtonColor: "#2563eb",
+                    background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                    color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+                });
+            }} />
+            <ShareModal open={shareModalOpen} onClose={() => setShareModalOpen(false)} post={shareTargetPost} showToast={(msg, type) => {
+                MySwal.fire({
+                    title: type === "success" ? "Success" : type === "error" ? "Error" : "Warning",
+                    text: msg,
+                    icon: type,
+                    confirmButtonColor: "#2563eb",
+                    background: document.documentElement.classList.contains("dark") ? "#1f2937" : "#ffffff",
+                    color: document.documentElement.classList.contains("dark") ? "#e5e7eb" : "#111827",
+                });
+            }} />
+            <EditReportModal
+                open={editModalOpen}
+                onClose={() => setEditModalOpen(false)}
+                post={editTargetPost}
+                onSubmit={submitEdit}
+            />
+            <DeleteConfirmationModal
+                open={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={handleDelete}
+                reportId={deleteTargetId}
+            />
         </div>
     );
 }

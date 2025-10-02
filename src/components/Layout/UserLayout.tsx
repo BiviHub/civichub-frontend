@@ -11,9 +11,9 @@ import {
     ChevronRight,
     X,
     AlertCircle,
-
 } from "lucide-react";
 import { Link, useLocation, Outlet } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { logout } from "../../services/authService";
 import UserNavbar from "./UserNavbar";
 
@@ -138,38 +138,137 @@ const UserLayout = () => {
                     <Outlet />
 
                     {/* Notification Modal */}
-                    {showNotifications && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                            <div className="bg-white/15 dark:bg-gray-900/15 rounded-2xl shadow-2xl p-4 w-[90%] max-w-md transform transition-all duration-300 scale-95 opacity-0 animate-fadeInScale border border-white/20 backdrop-blur-xl">
-                                <div className="flex justify-between items-center mb-3">
-                                    <h2 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent dark:text-white">
-                                        Notifications
-                                    </h2>
-                                    <button onClick={() => setShowNotifications(false)} className="text-gray-500 dark:text-white/60 hover:text-red-500">
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                </div>
+                    <AnimatePresence>
+                        {showNotifications && (
+                            <motion.div
+                                className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/80 dark:bg-black/80"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                            >
+                                <motion.div
+                                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 w-[95%] max-w-md max-h-[60vh] flex flex-col"
+                                    initial={{ y: -50, opacity: 0, scale: 0.95 }}
+                                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                                    exit={{ y: -50, opacity: 0, scale: 0.95 }}
+                                    transition={{ duration: 0.2, ease: "easeOut" }}
+                                >
+                                    <div className="flex justify-between items-center mb-3 border-b border-gray-200 dark:border-gray-700 pb-3">
+                                        <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                            <Bell className="w-5 h-5 text-blue-600 dark:text-green-400" />
+                                            Notifications
+                                        </h2>
+                                        <button
+                                            onClick={() => setShowNotifications(false)}
+                                            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
 
-                                <div className="space-y-2 max-h-[250px] overflow-y-auto">
-                                    <div className="bg-white/10 dark:bg-gray-900/10 p-2 rounded-md text-sm text-gray-800 dark:text-white/70">
-                                        You have a new message.
-                                    </div>
-                                    <div className="bg-white/10 dark:bg-gray-900/10 p-2 rounded-md text-sm text-gray-800 dark:text-white/70">
-                                        Your profile was updated.
-                                    </div>
-                                    <div className="bg-white/10 dark:bg-gray-900/10 p-2 rounded-md text-sm text-gray-800 dark:text-white/70">
-                                        System maintenance at 11PM.
-                                    </div>
-                                </div>
+                                    <motion.div
+                                        className="flex-1 overflow-y-auto space-y-2 mb-3 pr-1"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.1, duration: 0.3 }}
+                                    >
+                                        <motion.div
+                                            className="bg-blue-50 dark:bg-green-950/20 p-3 rounded-lg border-l-4 border-blue-500 dark:border-green-400"
+                                            initial={{ x: -20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.15, duration: 0.3 }}
+                                        >
+                                            <div className="flex items-start gap-2">
+                                                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mt-0.5">
+                                                    <Bell className="w-4 h-4 text-blue-600 dark:text-green-400" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">You have a new message.</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">2 minutes ago</p>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                        <motion.div
+                                            className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border-l-4 border-gray-400 dark:border-gray-500"
+                                            initial={{ x: -20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.2, duration: 0.3 }}
+                                        >
+                                            <div className="flex items-start gap-2">
+                                                <div className="flex-shrink-0 w-8 h-8 bg-gray-100 dark:bg-gray-600/50 rounded-full flex items-center justify-center mt-0.5">
+                                                    <User className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">Your profile was updated.</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">1 hour ago</p>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                        <motion.div
+                                            className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border-l-4 border-yellow-500 dark:border-yellow-400"
+                                            initial={{ x: -20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.25, duration: 0.3 }}
+                                        >
+                                            <div className="flex items-start gap-2">
+                                                <div className="flex-shrink-0 w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mt-0.5">
+                                                    <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">System maintenance at 11PM.</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Just now</p>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                        <motion.div
+                                            className="bg-blue-50 dark:bg-green-950/20 p-3 rounded-lg border-l-4 border-blue-500 dark:border-green-400"
+                                            initial={{ x: -20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.3, duration: 0.3 }}
+                                        >
+                                            <div className="flex items-start gap-2">
+                                                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mt-0.5">
+                                                    <Bell className="w-4 h-4 text-blue-600 dark:text-green-400" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">Another new message arrived.</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">5 minutes ago</p>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                        <motion.div
+                                            className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border-l-4 border-gray-400 dark:border-gray-500"
+                                            initial={{ x: -20, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.35, duration: 0.3 }}
+                                        >
+                                            <div className="flex items-start gap-2">
+                                                <div className="flex-shrink-0 w-8 h-8 bg-gray-100 dark:bg-gray-600/50 rounded-full flex items-center justify-center mt-0.5">
+                                                    <User className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">Friend request accepted.</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">2 hours ago</p>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    </motion.div>
 
-                                <div className="flex justify-end mt-3">
-                                    <button className="px-3 py-1 text-sm font-medium rounded-md bg-gradient-to-r from-blue-600 to-green-500 text-white hover:opacity-90 transition duration-300 flex items-center gap-1">
-                                        <SendIconFallback /> Mark all as read
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                                    <motion.div
+                                        className="pt-3 border-t border-gray-200 dark:border-gray-700"
+                                        initial={{ y: 20, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        transition={{ delay: 0.4, duration: 0.3 }}
+                                    >
+                                        <button className="w-full px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-blue-600 to-green-500 text-white hover:from-blue-700 hover:to-green-600 transition-all duration-300 flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md">
+                                            <SendIconFallback />
+                                            Mark all as read
+                                        </button>
+                                    </motion.div>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </main>
             </div>
         </div>
@@ -182,7 +281,7 @@ const UserLayout = () => {
  */
 function SendIconFallback() {
     return (
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
             <line x1="22" y1="2" x2="11" y2="13" />
             <polygon points="22 2 15 22 11 13 2 9 22 2" />
         </svg>
