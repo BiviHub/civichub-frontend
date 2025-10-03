@@ -4,8 +4,3 @@ to = "http://sirraph-001-site1.stempurl.com/api/:splat"
 status = 200
 force = true
 proxy = true
-
-[[headers]]
-for = "/*"
-[headers.values]
-"Content-Type" = "application/javascript"
