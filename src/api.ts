@@ -2,17 +2,18 @@ import axios from 'axios';
 
 let baseURL = import.meta.env.VITE_API_URL;
 
-// Fallback for development/localhost, override for production
+// Fallback logic
 if (!baseURL) {
     const port = window.location.port;
 
+    // Local development fallbacks
     if (port === '44301') {
         baseURL = 'https://localhost:44301/api';
     } else if (port === '7207') {
         baseURL = 'https://localhost:7207/api';
     } else {
-        // Default to live backend URL for production
-        baseURL = 'http://sirraph-001-site1.stempurl.com/api';
+        // Default to proxy path for Netlify (production)
+        baseURL = '/api';
     }
 }
 
