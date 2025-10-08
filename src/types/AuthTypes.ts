@@ -171,3 +171,11 @@ export interface PrivacySettingsDTO {
 export interface Update2FADTO {
     enabled: boolean;
 }
+export interface AnnouncementDTO {
+    id?: number;
+    title: string;
+    content: string;
+    dateCreated?: string;
+    createdById?: string;
+    createdBy?: string;
+}
