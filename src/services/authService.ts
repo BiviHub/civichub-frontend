@@ -14,6 +14,7 @@ import type {
     FlagReportDTO,
     ProfileDTO,
     EditReportDTO,
+    AnnouncementDTO,
 } from '../types/AuthTypes';
 
 export const login = async (loginData: LoginDTO) => {
@@ -248,5 +249,74 @@ export const deleteReport = async (reportId: number): Promise<{ message: string 
                 ? 'Please log in to delete this report.'
                 : error.response?.data?.message || 'Failed to delete report.'
         );
+    }
+};
+
+export const getAnnouncements = async (): Promise<AnnouncementDTO[]> => {
+    const res = await api.get('/Admin/GetAnnouncements');
+    if (!res || !res.data) return [];
+    return Array.isArray(res.data) ? res.data : [];
+};
+
+
+export const getAnnouncementById = async (id: number): Promise<AnnouncementDTO> => {
+    const res = await api.get(`/Admin/GetAnnouncementById/${id}`);
+    return res.data;
+};
+
+
+export const createAnnouncement = async (dto: AnnouncementDTO) => {
+    const res = await api.post('/Admin/CreateAnnouncements', dto);
+    return res.data;
+};
+
+
+export const editAnnouncement = async (id: number, dto: AnnouncementDTO) => {
+    const res = await api.put(`/Admin/EditAnnouncements/${id}`, dto);
+    return res.data;
+};
+
+
+export const deleteAnnouncement = async (id: number) => {
+    const res = await api.delete(`/Admin/Announcements/${id}`);
+    return res.data;
+};
+
+
+export const getCurrentUserRole = (): string | null => {
+    try {
+        // prefer JWT
+        const token = localStorage.getItem('token');
+        if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const candidates = [
+                'role', 'roles', 'Role', 'Roles',
+                'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
+                'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role'
+            ];
+            for (const k of candidates) {
+                if (payload[k]) {
+                    const v = payload[k];
+                    return Array.isArray(v) ? String(v[0]) : String(v);
+                }
+            }
+            // fallback: any key containing 'role'
+            for (const k of Object.keys(payload)) {
+                if (k.toLowerCase().includes('role')) {
+                    const v = payload[k];
+                    return Array.isArray(v) ? String(v[0]) : String(v);
+                }
+            }
+        }
+
+        const stored = localStorage.getItem('civicHub_user');
+        if (stored) {
+            const obj = JSON.parse(stored);
+            if (obj?.role) return String(obj.role);
+        }
+
+        return null;
+    } catch {
+        return null;
     }
 };
